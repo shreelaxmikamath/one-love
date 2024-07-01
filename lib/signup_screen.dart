@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'profile_prompt_screen.dart';
 
 class SignupScreen extends StatelessWidget {
   final TextEditingController usernameController = TextEditingController();
@@ -48,11 +49,15 @@ class SignupScreen extends StatelessWidget {
                 );
 
                 if (response.statusCode == 201) {
-                  // Navigate to the login screen
-                  print("Signup successful!");
-                  Navigator.pop(context);
+                  var responseData = json.decode(response.body);
+                  String userId = responseData['user_id'].toString(); // Convert user_id to String
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ProfilePromptScreen(userId: userId), // Pass userId as a string
+                    ),
+                  );
                 } else {
-                  // Show error message
                   print("Signup failed!");
                 }
               },

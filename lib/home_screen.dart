@@ -4,40 +4,29 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class HomeScreen extends StatefulWidget {
+  final String userId;
+
+  HomeScreen({required this.userId});
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late String _timeString;
-  late String _username;
-  late String _email;
-  late String _contactNumber;
+  late String _welcomeMessage = 'Welcome to One-Love';
+  late String _username = '';
+  late String _email = '';
+  late String _contactNumber = '';
 
   @override
   void initState() {
     super.initState();
-    _timeString = _formatDateTime(DateTime.now());
-    Timer.periodic(Duration(seconds: 1), (Timer t) => _getTime());
     _loadUserInfo();
   }
 
-  void _getTime() {
-    final DateTime now = DateTime.now();
-    final String formattedDateTime = _formatDateTime(now);
-    setState(() {
-      _timeString = formattedDateTime;
-    });
-  }
-
-  String _formatDateTime(DateTime dateTime) {
-    return "${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}:${dateTime.second.toString().padLeft(2, '0')}";
-  }
-
   void _loadUserInfo() async {
-    // Load user information from the database
     var response = await http.get(
-      Uri.parse('http://10.0.2.2:5000/user_info'),
+      Uri.parse('http://10.0.2.2:5000/user_info?user_id=${widget.userId}'),
       headers: {"Content-Type": "application/json"},
     );
 
@@ -57,7 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Asteria'),
+        title: Text('One-Love'),
         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.chat),
@@ -98,9 +87,9 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Center(
         child: Text(
-          _timeString,
+          _welcomeMessage,
           style: TextStyle(
-            fontSize: 48,
+            fontSize: 28,
             fontWeight: FontWeight.bold,
           ),
         ),

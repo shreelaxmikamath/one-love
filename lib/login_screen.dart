@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'signup_screen.dart';
-import 'profile_prompt_screen.dart';
+import 'home_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -40,9 +40,11 @@ class LoginScreen extends StatelessWidget {
                 if (response.statusCode == 200) {
                   var responseBody = json.decode(response.body);
                   String userId = responseBody['user_id'].toString();
+                  bool isProfileComplete = responseBody['is_profile_complete']; // Assuming this is returned from your backend
+
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => ProfilePromptScreen(userId: userId)),
+                    MaterialPageRoute(builder: (context) => HomeScreen(userId: userId)),
                   );
                 } else {
                   print("Login failed!");
