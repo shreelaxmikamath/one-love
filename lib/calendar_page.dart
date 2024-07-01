@@ -16,6 +16,7 @@ class _CalendarPageState extends State<CalendarPage> {
   late DateTime _selectedDate = DateTime.now();
   late TextEditingController _noteController = TextEditingController();
   late FocusNode _noteFocus;
+  List<String> _savedNotes = []; // List to store saved notes
 
   @override
   void initState() {
@@ -26,6 +27,7 @@ class _CalendarPageState extends State<CalendarPage> {
   @override
   void dispose() {
     _noteFocus.dispose();
+    _noteController.dispose();
     super.dispose();
   }
 
@@ -40,15 +42,22 @@ class _CalendarPageState extends State<CalendarPage> {
           // When the user taps anywhere on the screen, unfocus the text field to dismiss the keyboard
           _noteFocus.unfocus();
         },
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildCalendar(),
-            SizedBox(height: 20),
-            _buildNoteTextField(),
-            SizedBox(height: 20),
-            _buildSaveButton(),
-          ],
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildCalendar(),
+                SizedBox(height: 20),
+                _buildNoteTextField(),
+                SizedBox(height: 20),
+                _buildSaveButton(),
+                SizedBox(height: 20), // Adjusted spacing for layout
+                _buildSavedNotes(), // Display saved notes
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -91,8 +100,34 @@ class _CalendarPageState extends State<CalendarPage> {
     );
   }
 
+  Widget _buildSavedNotes() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: _savedNotes.map((note) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Saved Note:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 8),
+            Text(note),
+            SizedBox(height: 16),
+          ],
+        );
+      }).toList(),
+    );
+  }
+
   void _saveNote() async {
     var note = _noteController.text;
+    if (note.isEmpty) {
+      // Display a snackbar or alert to inform the user to enter a note
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Please enter a note.")));
+      return;
+    }
+
     // Replace with your API endpoint to save note to the database
     var response = await http.post(
       Uri.parse('http://10.0.2.2:5000/save_note'),
@@ -106,11 +141,16 @@ class _CalendarPageState extends State<CalendarPage> {
 
     if (response.statusCode == 200) {
       // Note saved successfully
-      print("Note saved successfully!");
-      // Optionally, you can show a success message or navigate back
+      setState(() {
+        _savedNotes.add(note); // Add new note to the list of saved notes
+      });
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Note saved successfully!")));
     } else {
       // Handle error case
-      print("Failed to save note!");
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to save note!")));
     }
+
+    // Clear text field after saving note
+    _noteController.clear();
   }
 }

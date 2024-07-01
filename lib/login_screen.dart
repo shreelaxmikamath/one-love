@@ -40,7 +40,9 @@ class LoginScreen extends StatelessWidget {
                 if (response.statusCode == 200) {
                   var responseBody = json.decode(response.body);
                   String userId = responseBody['user_id'].toString();
-                  bool isProfileComplete = responseBody['is_profile_complete']; // Assuming this is returned from your backend
+
+                  // Ensure is_profile_complete is a bool, default to false if not present
+                  bool isProfileComplete = responseBody['is_profile_complete'] ?? false;
 
                   Navigator.pushReplacement(
                     context,

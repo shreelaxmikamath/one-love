@@ -60,6 +60,15 @@ def user_info():
         return jsonify(user_info), 200
     else:
         return jsonify({"message": "User not found!"}), 404
+@app.route('/save_note', methods=['POST'])
+def save_note():
+    data = request.json
+    cursor = db.cursor()
+    query = "INSERT INTO notes (user_id, date, note) VALUES (%s, %s, %s)"
+    values = (data['user_id'], data['date'], data['note'])
+    cursor.execute(query, values)
+    db.commit()
+    return jsonify({"message": "Note saved successfully!"}), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
