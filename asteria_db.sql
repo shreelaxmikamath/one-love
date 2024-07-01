@@ -35,6 +35,12 @@ CREATE TABLE `users` (
   `contact_number` varchar(15) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+
+ALTER TABLE `users`
+ADD CONSTRAINT `username_unique` UNIQUE (`username`);
+ALTER TABLE `users`
+ADD COLUMN `full_name` varchar(100) NOT NULL AFTER `username`;
+
 --
 -- Dumping data for table `users`
 --
@@ -130,3 +136,11 @@ CREATE TABLE `notes` (
   KEY `user_id` (`user_id`),
   CONSTRAINT `fk_notes_users` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE notifications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    date DATE NOT NULL,
+    message TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'notifications_page.dart';
 
 class CalendarPage extends StatefulWidget {
   final String userId;
@@ -36,6 +37,17 @@ class _CalendarPageState extends State<CalendarPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Calendar'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.notifications),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => NotificationsPage(userId: widget.userId)),
+              );
+            },
+          ),
+        ],
       ),
       body: GestureDetector(
         onTap: () {

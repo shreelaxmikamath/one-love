@@ -8,6 +8,7 @@ class SignupScreen extends StatelessWidget {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController contactNumberController = TextEditingController();
+  final TextEditingController fullNameController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -20,6 +21,10 @@ class SignupScreen extends StatelessWidget {
             TextField(
               controller: usernameController,
               decoration: InputDecoration(labelText: 'Username'),
+            ),
+            TextField(
+              controller: fullNameController,
+              decoration: InputDecoration(labelText: 'Full Name'),
             ),
             TextField(
               controller: emailController,
@@ -42,6 +47,7 @@ class SignupScreen extends StatelessWidget {
                   headers: {"Content-Type": "application/json"},
                   body: json.encode({
                     "username": usernameController.text,
+                    "full_name": fullNameController.text,
                     "email": emailController.text,
                     "password": passwordController.text,
                     "contact_number": contactNumberController.text,
@@ -54,11 +60,17 @@ class SignupScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => ProfilePromptScreen(userId: userId), // Pass userId as a string
+                      builder: (context) => ProfilePromptScreen(userId: userId),
                     ),
                   );
+                } else if (response.statusCode == 409) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text("Username already exists. Please choose a different username."),
+                  ));
                 } else {
-                  print("Signup failed!");
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text("Signup failed. Please try again later."),
+                  ));
                 }
               },
               child: Text('Sign Up'),
