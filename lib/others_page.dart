@@ -1,5 +1,6 @@
-// others_page.dart
 import 'package:flutter/material.dart';
+import 'shopping_preparation_checklists.dart';
+import 'journaling_memories.dart';
 
 class OthersPage extends StatelessWidget {
   @override
@@ -9,9 +10,39 @@ class OthersPage extends StatelessWidget {
         title: Text('Others'),
       ),
       body: Center(
-        child: Text(
-          'Others Page',
-          style: TextStyle(fontSize: 24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ShoppingPreparationChecklist(),
+                  ),
+                );
+              },
+              child: Text(
+                'Shopping and Preparation Checklist',
+                style: TextStyle(fontSize: 18, color: Colors.black),
+              ),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => JournalingMemories(),
+                  ),
+                );
+              },
+              child: Text(
+                'Journalings and Memories',
+                style: TextStyle(fontSize: 18, color: Colors.black),
+              ),
+            ),
+          ],
         ),
       ),
     );
