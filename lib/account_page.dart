@@ -39,12 +39,25 @@ class _AccountPageState extends State<AccountPage> {
     }
   }
 
-  void _updateProfileDetails(Map<String, dynamic> updatedProfileData) {
-    // TODO: Send updatedProfileData to the server to update the profile
-    setState(() {
-      _profileData = updatedProfileData;
-      _profileDetails = Future.value(updatedProfileData);
-    });
+  Future<void> _updateProfileDetails(Map<String, dynamic> updatedProfileData) async {
+    try {
+      var response = await http.post(
+        Uri.parse('http://10.0.2.2:5000/save_profile'),
+        headers: {"Content-Type": "application/json"},
+        body: json.encode(updatedProfileData),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _profileData = updatedProfileData;
+          _profileDetails = Future.value(updatedProfileData);
+        });
+      } else {
+        throw Exception('Failed to update profile');
+      }
+    } catch (e) {
+      throw Exception('Error: $e');
+    }
   }
 
   void _editProfile() {
@@ -66,6 +79,7 @@ class _AccountPageState extends State<AccountPage> {
             ),
             TextButton(
               onPressed: () {
+                _updateProfileDetails(_profileData);
                 Navigator.of(context).pop();
               },
               child: Text('Save'),
@@ -101,6 +115,10 @@ class _AccountPageState extends State<AccountPage> {
               padding: const EdgeInsets.all(16.0),
               child: ListView(
                 children: <Widget>[
+                  ListTile(
+                    title: Text('Full Name'),
+                    subtitle: Text(profileData['full_name']),
+                  ),
                   ListTile(
                     title: Text('Username'),
                     subtitle: Text(profileData['username']),
@@ -162,6 +180,7 @@ class _EditProfileForm extends StatefulWidget {
 }
 
 class __EditProfileFormState extends State<_EditProfileForm> {
+  late TextEditingController _fullNameController;
   late TextEditingController _usernameController;
   late TextEditingController _emailController;
   late TextEditingController _contactNumberController;
@@ -176,6 +195,7 @@ class __EditProfileFormState extends State<_EditProfileForm> {
   @override
   void initState() {
     super.initState();
+    _fullNameController = TextEditingController(text: widget.profileData['full_name']);
     _usernameController = TextEditingController(text: widget.profileData['username']);
     _emailController = TextEditingController(text: widget.profileData['email']);
     _contactNumberController = TextEditingController(text: widget.profileData['contact_number']);
@@ -193,16 +213,84 @@ class __EditProfileFormState extends State<_EditProfileForm> {
     return SingleChildScrollView(
       child: Column(
         children: <Widget>[
-          TextField(controller: _usernameController, decoration: InputDecoration(labelText: 'Username')),
-          TextField(controller: _emailController, decoration: InputDecoration(labelText: 'Email')),
-          TextField(controller: _contactNumberController, decoration: InputDecoration(labelText: 'Contact Number')),
-          TextField(controller: _ageController, decoration: InputDecoration(labelText: 'Age')),
-          TextField(controller: _genderController, decoration: InputDecoration(labelText: 'Gender')),
-          TextField(controller: _weightController, decoration: InputDecoration(labelText: 'Weight')),
-          TextField(controller: _heightController, decoration: InputDecoration(labelText: 'Height')),
-          TextField(controller: _dietController, decoration: InputDecoration(labelText: 'Diet')),
-          TextField(controller: _monthsController, decoration: InputDecoration(labelText: 'Months')),
-          TextField(controller: _childrenController, decoration: InputDecoration(labelText: 'Children')),
+          TextField(
+            controller: _fullNameController,
+            decoration: InputDecoration(labelText: 'Full Name'),
+            onChanged: (value) {
+              // Update full name in profileData when text changes
+              widget.profileData['full_name'] = value;
+            },
+          ),
+          TextField(
+            controller: _usernameController,
+            decoration: InputDecoration(labelText: 'Username'),
+            onChanged: (value) {
+              widget.profileData['username'] = value;
+            },
+          ),
+          TextField(
+            controller: _emailController,
+            decoration: InputDecoration(labelText: 'Email'),
+            onChanged: (value) {
+              widget.profileData['email'] = value;
+            },
+          ),
+          TextField(
+            controller: _contactNumberController,
+            decoration: InputDecoration(labelText: 'Contact Number'),
+            onChanged: (value) {
+              widget.profileData['contact_number'] = value;
+            },
+          ),
+          TextField(
+            controller: _ageController,
+            decoration: InputDecoration(labelText: 'Age'),
+            onChanged: (value) {
+              widget.profileData['age'] = int.tryParse(value) ?? 0;
+            },
+          ),
+          TextField(
+            controller: _genderController,
+            decoration: InputDecoration(labelText: 'Gender'),
+            onChanged: (value) {
+              widget.profileData['gender'] = value;
+            },
+          ),
+          TextField(
+            controller: _weightController,
+            decoration: InputDecoration(labelText: 'Weight'),
+            onChanged: (value) {
+              widget.profileData['weight'] = int.tryParse(value) ?? 0;
+            },
+          ),
+          TextField(
+            controller: _heightController,
+            decoration: InputDecoration(labelText: 'Height'),
+            onChanged: (value) {
+              widget.profileData['height'] = int.tryParse(value) ?? 0;
+            },
+          ),
+          TextField(
+            controller: _dietController,
+            decoration: InputDecoration(labelText: 'Diet'),
+            onChanged: (value) {
+              widget.profileData['diet'] = value;
+            },
+          ),
+          TextField(
+            controller: _monthsController,
+            decoration: InputDecoration(labelText: 'Months'),
+            onChanged: (value) {
+              widget.profileData['months'] = int.tryParse(value) ?? 0;
+            },
+          ),
+          TextField(
+            controller: _childrenController,
+            decoration: InputDecoration(labelText: 'Children'),
+            onChanged: (value) {
+              widget.profileData['children'] = int.tryParse(value) ?? 0;
+            },
+          ),
         ],
       ),
     );
@@ -210,6 +298,7 @@ class __EditProfileFormState extends State<_EditProfileForm> {
 
   @override
   void dispose() {
+    _fullNameController.dispose();
     _usernameController.dispose();
     _emailController.dispose();
     _contactNumberController.dispose();
@@ -222,4 +311,26 @@ class __EditProfileFormState extends State<_EditProfileForm> {
     _childrenController.dispose();
     super.dispose();
   }
+
+  void _saveProfile() {
+    // Prepare updated profile data
+    Map<String, dynamic> updatedProfileData = {
+      'user_id': widget.profileData['user_id'],
+      'full_name': _fullNameController.text,
+      'username': _usernameController.text,
+      'email': _emailController.text,
+      'contact_number': _contactNumberController.text,
+      'age': int.tryParse(_ageController.text) ?? 0,
+      'gender': _genderController.text,
+      'weight': int.tryParse(_weightController.text) ?? 0,
+      'height': int.tryParse(_heightController.text) ?? 0,
+      'diet': _dietController.text,
+      'months': int.tryParse(_monthsController.text) ?? 0,
+      'children': int.tryParse(_childrenController.text) ?? 0,
+    };
+
+    // Call onSave method to update profile details
+    widget.onSave(updatedProfileData);
+  }
 }
+

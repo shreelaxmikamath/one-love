@@ -42,17 +42,34 @@ class SignupScreen extends StatelessWidget {
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () async {
+                // Validate input fields
+                if (usernameController.text.isEmpty ||
+                    fullNameController.text.isEmpty ||
+                    emailController.text.isEmpty ||
+                    passwordController.text.isEmpty ||
+                    contactNumberController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text("Please fill in all fields."),
+                  ));
+                  return; // Exit function if any field is empty
+                }
+
+                var signupData = {
+                  "username": usernameController.text,
+                  "full_name": fullNameController.text,
+                  "email": emailController.text,
+                  "password": passwordController.text,
+                  "contact_number": contactNumberController.text,
+                };
+                print('Signup Data: $signupData');
+
                 var response = await http.post(
                   Uri.parse('http://10.0.2.2:5000/signup'),
                   headers: {"Content-Type": "application/json"},
-                  body: json.encode({
-                    "username": usernameController.text,
-                    "full_name": fullNameController.text,
-                    "email": emailController.text,
-                    "password": passwordController.text,
-                    "contact_number": contactNumberController.text,
-                  }),
+                  body: json.encode(signupData),
                 );
+
+                print('Signup Response: ${response.body}');
 
                 if (response.statusCode == 201) {
                   var responseData = json.decode(response.body);
@@ -60,7 +77,13 @@ class SignupScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => ProfilePromptScreen(userId: userId),
+                      builder: (context) => ProfilePromptScreen(
+                        userId: userId,
+                        fullName: fullNameController.text,
+                        username: usernameController.text,
+                        email: emailController.text,
+                        contactNumber: contactNumberController.text,
+                      ),
                     ),
                   );
                 } else if (response.statusCode == 409) {

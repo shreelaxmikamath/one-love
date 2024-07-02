@@ -60,7 +60,6 @@ CREATE TABLE `user_profiles` (
   `id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `age` int(11) DEFAULT NULL,
-  `gender` varchar(50) DEFAULT NULL,
   `weight` float DEFAULT NULL,
   `height` float DEFAULT NULL,
   `diet` varchar(50) DEFAULT NULL,
@@ -73,9 +72,9 @@ CREATE TABLE `user_profiles` (
 -- Dumping data for table `user_profiles`
 --
 
-INSERT INTO `user_profiles` (`id`, `user_id`, `age`, `gender`, `weight`, `height`, `diet`, `months`, `children`, `created_at`) VALUES
-(1, 2, 20, 'male', 45, 175, 'vegetarian', 0, 0, '2024-06-27 06:46:30'),
-(2, 3, 20, 'male', 65, 125, 'veg', 0, 0, '2024-06-27 06:49:20');
+INSERT INTO `user_profiles` (`id`, `user_id`, `age`, `weight`, `height`, `diet`, `months`, `children`, `created_at`) VALUES
+(1, 2, 20, 45, 175, 'vegetarian', 0, 0, '2024-06-27 06:46:30'),
+(2, 3, 20, 65, 125, 'veg', 0, 0, '2024-06-27 06:49:20');
 
 --
 -- Indexes for dumped tables
