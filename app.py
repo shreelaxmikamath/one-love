@@ -9,7 +9,7 @@ try:
     db = mysql.connector.connect(
         host="localhost",
         user="root",
-        password="",
+        password="",  # Add your MySQL password here
         database="asteria_db"
     )
     print("Connected to MySQL database")
@@ -90,7 +90,7 @@ def save_profile():
 
         # Insert or update user profile information
         profile_update_query = """
-        INSERT INTO user_profiles (user_id, age,weight, height, diet, months, children)
+        INSERT INTO user_profiles (user_id, age, weight, height, diet, months, children)
         VALUES (%s, %s, %s, %s, %s, %s, %s)
         ON DUPLICATE KEY UPDATE
         age=VALUES(age), weight=VALUES(weight), height=VALUES(height),
@@ -112,16 +112,13 @@ def save_profile():
     finally:
         cursor.close()
 
-
-
-
 @app.route('/user_info', methods=['GET'])
 def user_info():
     user_id = request.args.get('user_id')
     try:
         cursor = db.cursor(dictionary=True)
         query = """
-        SELECT u.full_name, u.username, u.email, u.contact_number, p.age,p.weight, p.height, p.diet, p.months, p.children
+        SELECT u.full_name, u.username, u.email, u.contact_number, p.age, p.weight, p.height, p.diet, p.months, p.children
         FROM users u
         LEFT JOIN user_profiles p ON u.id = p.user_id
         WHERE u.id=%s
