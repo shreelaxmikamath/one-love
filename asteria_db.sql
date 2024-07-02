@@ -45,11 +45,10 @@ ADD COLUMN `full_name` varchar(100) NOT NULL AFTER `username`;
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `username`, `email`, `password`, `contact_number`) VALUES
-(1, 'prathviraj', 'pr@gmail.com', 'password', '8546954246'),
-(2, 'new', 'new@gmail.com', 'password', '6362792887'),
-(3, 'nm', 'nm@gmail.com', 'password', '1478523698');
-
+INSERT INTO `users` (`id`, `username`,`full_name`, `email`, `password`, `contact_number`) VALUES
+(1, 'preethi','preethi rao', 'preethi@gmail.com' ,'password', '8546954246'),
+(2, 'nm','namitha m', 'namitha@gmail.com' ,'password', '9587462410'),
+(3, 'riya','riya james', 'riya@gmail.com' ,'password', '8546789650');
 -- --------------------------------------------------------
 
 --
