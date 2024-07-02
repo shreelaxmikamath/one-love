@@ -79,7 +79,7 @@ class _AccountPageState extends State<AccountPage> {
             ),
             TextButton(
               onPressed: () {
-                _updateProfileDetails(_profileData);
+                _saveProfile(); // Call _saveProfile method to initiate saving
                 Navigator.of(context).pop();
               },
               child: Text('Save'),
@@ -88,6 +88,26 @@ class _AccountPageState extends State<AccountPage> {
         );
       },
     );
+  }
+
+  void _saveProfile() {
+    // Prepare updated profile data
+    Map<String, dynamic> updatedProfileData = {
+      'user_id': _profileData['user_id'],
+      'full_name': _profileData['full_name'],
+      'username': _profileData['username'],
+      'email': _profileData['email'],
+      'contact_number': _profileData['contact_number'],
+      'age': int.tryParse(_profileData['age']) ?? 0,  // Ensure 'age' is parsed to int
+      'weight': int.tryParse(_profileData['weight']) ?? 0,  // Ensure 'weight' is parsed to int
+      'height': int.tryParse(_profileData['height']) ?? 0,  // Ensure 'height' is parsed to int
+      'diet': _profileData['diet'],
+      'months': int.tryParse(_profileData['months']) ?? 0,  // Ensure 'months' is parsed to int
+      'children': int.tryParse(_profileData['children']) ?? 0,  // Ensure 'children' is parsed to int
+    };
+
+    // Call onSave method to update profile details
+    _updateProfileDetails(updatedProfileData);
   }
 
   @override
@@ -117,47 +137,43 @@ class _AccountPageState extends State<AccountPage> {
                 children: <Widget>[
                   ListTile(
                     title: Text('Full Name'),
-                    subtitle: Text(profileData['full_name']),
+                    subtitle: Text(profileData['full_name'] ?? 'N/A'),
                   ),
                   ListTile(
                     title: Text('Username'),
-                    subtitle: Text(profileData['username']),
+                    subtitle: Text(profileData['username'] ?? 'N/A'),
                   ),
                   ListTile(
                     title: Text('Email'),
-                    subtitle: Text(profileData['email']),
+                    subtitle: Text(profileData['email'] ?? 'N/A'),
                   ),
                   ListTile(
                     title: Text('Contact Number'),
-                    subtitle: Text(profileData['contact_number']),
+                    subtitle: Text(profileData['contact_number'] ?? 'N/A'),
                   ),
                   ListTile(
                     title: Text('Age'),
-                    subtitle: Text(profileData['age'].toString()),
-                  ),
-                  ListTile(
-                    title: Text('Gender'),
-                    subtitle: Text(profileData['gender']),
+                    subtitle: Text(profileData['age']?.toString() ?? 'N/A'),
                   ),
                   ListTile(
                     title: Text('Weight'),
-                    subtitle: Text(profileData['weight'].toString()),
+                    subtitle: Text(profileData['weight']?.toString() ?? 'N/A'),
                   ),
                   ListTile(
                     title: Text('Height'),
-                    subtitle: Text(profileData['height'].toString()),
+                    subtitle: Text(profileData['height']?.toString() ?? 'N/A'),
                   ),
                   ListTile(
                     title: Text('Diet'),
-                    subtitle: Text(profileData['diet']),
+                    subtitle: Text(profileData['diet'] ?? 'N/A'),
                   ),
                   ListTile(
                     title: Text('Months'),
-                    subtitle: Text(profileData['months'].toString()),
+                    subtitle: Text(profileData['months']?.toString() ?? 'N/A'),
                   ),
                   ListTile(
                     title: Text('Children'),
-                    subtitle: Text(profileData['children'].toString()),
+                    subtitle: Text(profileData['children']?.toString() ?? 'N/A'),
                   ),
                 ],
               ),
@@ -185,7 +201,6 @@ class __EditProfileFormState extends State<_EditProfileForm> {
   late TextEditingController _emailController;
   late TextEditingController _contactNumberController;
   late TextEditingController _ageController;
-  late TextEditingController _genderController;
   late TextEditingController _weightController;
   late TextEditingController _heightController;
   late TextEditingController _dietController;
@@ -195,17 +210,16 @@ class __EditProfileFormState extends State<_EditProfileForm> {
   @override
   void initState() {
     super.initState();
-    _fullNameController = TextEditingController(text: widget.profileData['full_name']);
-    _usernameController = TextEditingController(text: widget.profileData['username']);
-    _emailController = TextEditingController(text: widget.profileData['email']);
-    _contactNumberController = TextEditingController(text: widget.profileData['contact_number']);
-    _ageController = TextEditingController(text: widget.profileData['age'].toString());
-    _genderController = TextEditingController(text: widget.profileData['gender']);
-    _weightController = TextEditingController(text: widget.profileData['weight'].toString());
-    _heightController = TextEditingController(text: widget.profileData['height'].toString());
-    _dietController = TextEditingController(text: widget.profileData['diet']);
-    _monthsController = TextEditingController(text: widget.profileData['months'].toString());
-    _childrenController = TextEditingController(text: widget.profileData['children'].toString());
+    _fullNameController = TextEditingController(text: widget.profileData['full_name'] ?? '');
+    _usernameController = TextEditingController(text: widget.profileData['username'] ?? '');
+    _emailController = TextEditingController(text: widget.profileData['email'] ?? '');
+    _contactNumberController = TextEditingController(text: widget.profileData['contact_number'] ?? '');
+    _ageController = TextEditingController(text: widget.profileData['age']?.toString() ?? '');
+    _weightController = TextEditingController(text: widget.profileData['weight']?.toString() ?? '');
+    _heightController = TextEditingController(text: widget.profileData['height']?.toString() ?? '');
+    _dietController = TextEditingController(text: widget.profileData['diet'] ?? '');
+    _monthsController = TextEditingController(text: widget.profileData['months']?.toString() ?? '');
+    _childrenController = TextEditingController(text: widget.profileData['children']?.toString() ?? '');
   }
 
   @override
@@ -217,78 +231,70 @@ class __EditProfileFormState extends State<_EditProfileForm> {
             controller: _fullNameController,
             decoration: InputDecoration(labelText: 'Full Name'),
             onChanged: (value) {
-              // Update full name in profileData when text changes
-              widget.profileData['full_name'] = value;
+              widget.profileData['full_name'] = value; // Update profileData
             },
           ),
           TextField(
             controller: _usernameController,
             decoration: InputDecoration(labelText: 'Username'),
             onChanged: (value) {
-              widget.profileData['username'] = value;
+              widget.profileData['username'] = value; // Update profileData
             },
           ),
           TextField(
             controller: _emailController,
             decoration: InputDecoration(labelText: 'Email'),
             onChanged: (value) {
-              widget.profileData['email'] = value;
+              widget.profileData['email'] = value; // Update profileData
             },
           ),
           TextField(
             controller: _contactNumberController,
             decoration: InputDecoration(labelText: 'Contact Number'),
             onChanged: (value) {
-              widget.profileData['contact_number'] = value;
+              widget.profileData['contact_number'] = value; // Update profileData
             },
           ),
           TextField(
             controller: _ageController,
             decoration: InputDecoration(labelText: 'Age'),
             onChanged: (value) {
-              widget.profileData['age'] = int.tryParse(value) ?? 0;
-            },
-          ),
-          TextField(
-            controller: _genderController,
-            decoration: InputDecoration(labelText: 'Gender'),
-            onChanged: (value) {
-              widget.profileData['gender'] = value;
+              widget.profileData['age'] = value; // Update profileData
             },
           ),
           TextField(
             controller: _weightController,
             decoration: InputDecoration(labelText: 'Weight'),
             onChanged: (value) {
-              widget.profileData['weight'] = int.tryParse(value) ?? 0;
+              widget.profileData['weight'] = value; // Update profileData
             },
           ),
           TextField(
             controller: _heightController,
             decoration: InputDecoration(labelText: 'Height'),
             onChanged: (value) {
-              widget.profileData['height'] = int.tryParse(value) ?? 0;
+              widget.profileData['height'] = value; // Update profileData
             },
           ),
           TextField(
             controller: _dietController,
             decoration: InputDecoration(labelText: 'Diet'),
             onChanged: (value) {
-              widget.profileData['diet'] = value;
+              widget.profileData['diet'] = value; // Update profileData
             },
           ),
           TextField(
             controller: _monthsController,
             decoration: InputDecoration(labelText: 'Months'),
             onChanged: (value) {
-              widget.profileData['months'] = int.tryParse(value) ?? 0;
+              widget.profileData['months'] = value; // Update profileData
             },
           ),
           TextField(
             controller: _childrenController,
             decoration: InputDecoration(labelText: 'Children'),
             onChanged: (value) {
-              widget.profileData['children'] = int.tryParse(value) ?? 0;
+              widget.profileData['children'] = value; // Update profileData
             },
           ),
         ],
@@ -303,7 +309,6 @@ class __EditProfileFormState extends State<_EditProfileForm> {
     _emailController.dispose();
     _contactNumberController.dispose();
     _ageController.dispose();
-    _genderController.dispose();
     _weightController.dispose();
     _heightController.dispose();
     _dietController.dispose();
@@ -311,26 +316,4 @@ class __EditProfileFormState extends State<_EditProfileForm> {
     _childrenController.dispose();
     super.dispose();
   }
-
-  void _saveProfile() {
-    // Prepare updated profile data
-    Map<String, dynamic> updatedProfileData = {
-      'user_id': widget.profileData['user_id'],
-      'full_name': _fullNameController.text,
-      'username': _usernameController.text,
-      'email': _emailController.text,
-      'contact_number': _contactNumberController.text,
-      'age': int.tryParse(_ageController.text) ?? 0,
-      'gender': _genderController.text,
-      'weight': int.tryParse(_weightController.text) ?? 0,
-      'height': int.tryParse(_heightController.text) ?? 0,
-      'diet': _dietController.text,
-      'months': int.tryParse(_monthsController.text) ?? 0,
-      'children': int.tryParse(_childrenController.text) ?? 0,
-    };
-
-    // Call onSave method to update profile details
-    widget.onSave(updatedProfileData);
-  }
 }
-
