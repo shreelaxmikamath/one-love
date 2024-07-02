@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'shopping_preparation_checklists.dart';
 import 'journaling_memories.dart';
+import 'emergency_contact_form.dart'; // Import the new form page
 
 class OthersPage extends StatelessWidget {
   @override
@@ -38,7 +39,22 @@ class OthersPage extends StatelessWidget {
                 );
               },
               child: Text(
-                'Journalings and Memories',
+                'Journaling and Memories',
+                style: TextStyle(fontSize: 18, color: Colors.black),
+              ),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EmergencyContactForm(), // Navigate to the new form page
+                  ),
+                );
+              },
+              child: Text(
+                'Emergency Contact',
                 style: TextStyle(fontSize: 18, color: Colors.black),
               ),
             ),
