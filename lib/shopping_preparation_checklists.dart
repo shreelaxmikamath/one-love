@@ -1,88 +1,32 @@
 import 'package:flutter/material.dart';
+import 'hospital_bag_checklist.dart'; // Import the correct file
+import 'baby_shopping_list.dart';
+import 'personal_checklist.dart';
 
-class ShoppingPreparationChecklist {
-  String category;
-  List<String> items;
-
-  ShoppingPreparationChecklist({required this.category, required this.items});
-}
-
-List<ShoppingPreparationChecklist> shoppingPreparationChecklists = [
-  ShoppingPreparationChecklist(
-    category: "Important Documents",
-    items: [
-      "Photo ID",
-      "Hospital form",
-      "Insurance details",
-      "Birthing plan (if you have one)",
-    ],
-  ),
-  ShoppingPreparationChecklist(
-    category: "Personal Items",
-    items: [
-      "Eyeglasses (if you do wear them)",
-      "Charger and cell phone",
-      "USB charger cable",
-      "Portable power bank",
-    ],
-  ),
-  ShoppingPreparationChecklist(
-    category: "Comfort Items",
-    items: [
-      "2-3 pairs of non-skid socks",
-      "A warm sweater or robe",
-    ],
-  ),
-  ShoppingPreparationChecklist(
-    category: "Snacks",
-    items: [
-      "Sugar-free candy",
-      "Non-perishable snacks",
-    ],
-  ),
-  ShoppingPreparationChecklist(
-    category: "Clothing",
-    items: [
-      "Maternity bras (without an underwire)",
-      "Lightweight clothes",
-      "Comfortable maternity clothes to wear in the hospital",
-    ],
-  ),
-  ShoppingPreparationChecklist(
-    category: "Toiletries",
-    items: [
-      "Toothbrush",
-      "Toothpaste",
-      "Deodorant",
-      "Lip balm",
-      "Face wash",
-      "Headband or rubber bands",
-      "Moisturizer",
-      "Shampoo",
-      "Conditioner",
-    ],
-  ),
-];
-
-class ChecklistPage extends StatelessWidget {
+class ShoppingPreparationChecklist extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Shopping Preparation Checklist')),
-      body: ListView.builder(
-        itemCount: shoppingPreparationChecklists.length,
-        itemBuilder: (context, index) {
-          final checklist = shoppingPreparationChecklists[index];
-          return ExpansionTile(
-            title: Text(checklist.category),
-            children: checklist.items.map((item) => ListTile(title: Text(item))).toList(),
-          );
-        },
+    return DefaultTabController(
+      length: 3, // Number of tabs
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Shopping and Preparation Checklist'),
+          bottom: TabBar(
+            tabs: [
+              Tab(text: 'Hospital Bag'),
+              Tab(text: 'Baby Shopping'),
+              Tab(text: 'Personal'),
+            ],
+          ),
+        ),
+        body: TabBarView(
+          children: [
+            HospitalBagChecklistPage(userId: 1), // Adjust userId as per your requirement
+            BabyShoppingList(),
+            PersonalChecklist(),
+          ],
+        ),
       ),
     );
   }
-}
-
-void main() {
-  runApp(MaterialApp(home: ChecklistPage()));
 }
