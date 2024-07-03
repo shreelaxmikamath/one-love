@@ -134,6 +134,7 @@ def user_info():
     finally:
         cursor.close()
 
+
 @app.route('/save_note', methods=['POST'])
 def save_note():
     data = request.json
@@ -145,12 +146,72 @@ def save_note():
         db.commit()
         return jsonify({"message": "Note saved successfully!"}), 200
     except KeyError as e:
-        return handle_db_error(f"Missing required field: {str(e)}")
+        return jsonify({"error": f"Missing required field: {str(e)}"}), 400
     except Error as e:
         db.rollback()
-        return handle_db_error(f"Database error: {str(e)}")
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
     finally:
         cursor.close()
+
+@app.route('/get_notes', methods=['GET'])
+def get_notes():
+    user_id = request.args.get('user_id')
+    date = request.args.get('date')
+    try:
+        cursor = db.cursor(dictionary=True)
+        query = "SELECT id, note FROM notes WHERE user_id = %s AND date = %s"
+        cursor.execute(query, (user_id, date))
+        notes = cursor.fetchall()
+        return jsonify(notes), 200
+    except Error as e:
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
+    finally:
+        cursor.close()
+
+@app.route('/edit_note', methods=['PUT'])
+def edit_note():
+    data = request.json
+    try:
+        cursor = db.cursor()
+        query = "UPDATE notes SET note = %s WHERE id = %s"
+        values = (data['note'], data['note_id'])
+        cursor.execute(query, values)
+        db.commit()
+        return jsonify({"message": "Note edited successfully!"}), 200
+    except Error as e:
+        db.rollback()
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
+    finally:
+        cursor.close()
+
+@app.route('/delete_note', methods=['DELETE'])
+def delete_note():
+    data = request.json
+    try:
+        cursor = db.cursor()
+        query = "DELETE FROM notes WHERE id = %s"
+        cursor.execute(query, (data['note_id'],))
+        db.commit()
+        return jsonify({"message": "Note deleted successfully!"}), 200
+    except Error as e:
+        db.rollback()
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
+    finally:
+        cursor.close()
+
+@app.route('/notifications', methods=['GET'])
+def notifications():
+    user_id = request.args.get('user_id')
+    date = request.args.get('date')
+    cursor = db.cursor(dictionary=True)
+    query = "SELECT note AS message FROM notes WHERE user_id=%s AND date=%s"
+    cursor.execute(query, (user_id, date))
+    notifications = cursor.fetchall()
+    cursor.close()
+    if notifications:
+        return jsonify(notifications), 200
+    else:
+        return jsonify({"message": "No notifications found!"}), 404
 
 if __name__ == '__main__':
     app.run(debug=True)

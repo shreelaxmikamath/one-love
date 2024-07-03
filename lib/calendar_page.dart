@@ -17,12 +17,13 @@ class _CalendarPageState extends State<CalendarPage> {
   late DateTime _selectedDate = DateTime.now();
   late TextEditingController _noteController = TextEditingController();
   late FocusNode _noteFocus;
-  List<String> _savedNotes = []; // List to store saved notes
+  List<Map<String, dynamic>> _savedNotes = []; // List to store saved notes with IDs
 
   @override
   void initState() {
     super.initState();
     _noteFocus = FocusNode();
+    _fetchNotes(); // Fetch notes for the initial selected date
   }
 
   @override
@@ -30,6 +31,74 @@ class _CalendarPageState extends State<CalendarPage> {
     _noteFocus.dispose();
     _noteController.dispose();
     super.dispose();
+  }
+
+  void _fetchNotes() async {
+    var response = await http.get(Uri.parse('http://10.0.2.2:5000/get_notes?user_id=${widget.userId}&date=${_selectedDate.toString().substring(0, 10)}'));
+    if (response.statusCode == 200) {
+      setState(() {
+        _savedNotes = List<Map<String, dynamic>>.from(json.decode(response.body));
+      });
+    }
+  }
+
+  void _saveNote() async {
+    var note = _noteController.text;
+    if (note.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Please enter a note.")));
+      return;
+    }
+
+    var response = await http.post(
+      Uri.parse('http://10.0.2.2:5000/save_note'),
+      headers: {"Content-Type": "application/json"},
+      body: json.encode({
+        "user_id": widget.userId,
+        "date": _selectedDate.toString().substring(0, 10),
+        "note": note,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      _fetchNotes(); // Refresh notes after saving a new one
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Note saved successfully!")));
+      _noteController.clear();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to save note!")));
+    }
+  }
+
+  void _editNote(int noteId, String newNote) async {
+    var response = await http.put(
+      Uri.parse('http://10.0.2.2:5000/edit_note'),
+      headers: {"Content-Type": "application/json"},
+      body: json.encode({
+        "note_id": noteId,
+        "note": newNote,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      _fetchNotes(); // Refresh notes after editing
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Note edited successfully!")));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to edit note!")));
+    }
+  }
+
+  void _deleteNote(int noteId) async {
+    var response = await http.delete(
+      Uri.parse('http://10.0.2.2:5000/delete_note'),
+      headers: {"Content-Type": "application/json"},
+      body: json.encode({"note_id": noteId}),
+    );
+
+    if (response.statusCode == 200) {
+      _fetchNotes(); // Refresh notes after deleting
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Note deleted successfully!")));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to delete note!")));
+    }
   }
 
   @override
@@ -51,7 +120,6 @@ class _CalendarPageState extends State<CalendarPage> {
       ),
       body: GestureDetector(
         onTap: () {
-          // When the user taps anywhere on the screen, unfocus the text field to dismiss the keyboard
           _noteFocus.unfocus();
         },
         child: SingleChildScrollView(
@@ -65,8 +133,8 @@ class _CalendarPageState extends State<CalendarPage> {
                 _buildNoteTextField(),
                 SizedBox(height: 20),
                 _buildSaveButton(),
-                SizedBox(height: 20), // Adjusted spacing for layout
-                _buildSavedNotes(), // Display saved notes
+                SizedBox(height: 20),
+                _buildSavedNotes(),
               ],
             ),
           ),
@@ -86,6 +154,7 @@ class _CalendarPageState extends State<CalendarPage> {
       onDaySelected: (selectedDay, focusedDay) {
         setState(() {
           _selectedDate = selectedDay;
+          _fetchNotes(); // Fetch notes for the new selected date
         });
       },
     );
@@ -124,45 +193,55 @@ class _CalendarPageState extends State<CalendarPage> {
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 8),
-            Text(note),
+            Text(note['note']),
+            Row(
+              children: [
+                IconButton(
+                  icon: Icon(Icons.edit),
+                  onPressed: () {
+                    _noteController.text = note['note'];
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: Text('Edit Note'),
+                        content: TextField(
+                          controller: _noteController,
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(),
+                          ),
+                          maxLines: 3,
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              _editNote(note['id'], _noteController.text);
+                              Navigator.of(context).pop();
+                            },
+                            child: Text('Save'),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: Text('Cancel'),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+                IconButton(
+                  icon: Icon(Icons.delete),
+                  onPressed: () {
+                    _deleteNote(note['id']);
+                  },
+                ),
+              ],
+            ),
             SizedBox(height: 16),
           ],
         );
       }).toList(),
     );
-  }
-
-  void _saveNote() async {
-    var note = _noteController.text;
-    if (note.isEmpty) {
-      // Display a snackbar or alert to inform the user to enter a note
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Please enter a note.")));
-      return;
-    }
-
-    // Replace with your API endpoint to save note to the database
-    var response = await http.post(
-      Uri.parse('http://10.0.2.2:5000/save_note'),
-      headers: {"Content-Type": "application/json"},
-      body: json.encode({
-        "user_id": widget.userId,
-        "date": _selectedDate.toString().substring(0, 10),
-        "note": note,
-      }),
-    );
-
-    if (response.statusCode == 200) {
-      // Note saved successfully
-      setState(() {
-        _savedNotes.add(note); // Add new note to the list of saved notes
-      });
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Note saved successfully!")));
-    } else {
-      // Handle error case
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to save note!")));
-    }
-
-    // Clear text field after saving note
-    _noteController.clear();
   }
 }
