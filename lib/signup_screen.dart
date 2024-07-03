@@ -54,6 +54,23 @@ class SignupScreen extends StatelessWidget {
                   return; // Exit function if any field is empty
                 }
 
+                // Validate contact number (must be 10 digits)
+                if (contactNumberController.text.length != 10 ||
+                    !RegExp(r'^[0-9]+$').hasMatch(contactNumberController.text)) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text("Contact number must be a 10-digit number."),
+                  ));
+                  return;
+                }
+
+                // Validate email format
+                if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(emailController.text)) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text("Invalid email format."),
+                  ));
+                  return;
+                }
+
                 var signupData = {
                   "username": usernameController.text,
                   "full_name": fullNameController.text,

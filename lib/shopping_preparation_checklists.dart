@@ -64,7 +64,26 @@ List<ShoppingPreparationChecklist> shoppingPreparationChecklists = [
   ),
 ];
 
-class ChecklistPage extends StatelessWidget {
+class ChecklistPage extends StatefulWidget {
+  @override
+  _ChecklistPageState createState() => _ChecklistPageState();
+}
+
+class _ChecklistPageState extends State<ChecklistPage> {
+  Map<String, Map<String, bool>> checkedItems = {};
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize checkedItems map with false for each item
+    shoppingPreparationChecklists.forEach((category) {
+      checkedItems[category.category] = {};
+      category.items.forEach((item) {
+        checkedItems[category.category]![item] = false;
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,7 +94,19 @@ class ChecklistPage extends StatelessWidget {
           final checklist = shoppingPreparationChecklists[index];
           return ExpansionTile(
             title: Text(checklist.category),
-            children: checklist.items.map((item) => ListTile(title: Text(item))).toList(),
+            children: checklist.items.map((item) {
+              return CheckboxListTile(
+                title: Text(item),
+                value: checkedItems[checklist.category]![item] ?? false,
+                onChanged: (bool? value) {
+                  setState(() {
+                    if (checkedItems.containsKey(checklist.category)) {
+                      checkedItems[checklist.category]![item] = value ?? false;
+                    }
+                  });
+                },
+              );
+            }).toList(),
           );
         },
       ),

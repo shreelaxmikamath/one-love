@@ -212,6 +212,77 @@ def notifications():
         return jsonify(notifications), 200
     else:
         return jsonify({"message": "No notifications found!"}), 404
+#emergency contact
+@app.route('/emergency_contact', methods=['POST'])
+def add_emergency_contact():
+    try:
+        # Get data from request
+        data = request.json
+        name = data['name']
+        phone = data['phone']
 
+        # Check if name and phone are provided
+        if not name or not phone:
+            return jsonify({"error": "Both name and phone are required"}), 400
+
+        # Insert emergency contact into database
+        cursor = db.cursor()
+        insert_query = """
+        INSERT INTO emergency_contacts (user_id, name, phone)
+        VALUES (%s, %s, %s)
+        """
+        user_id = 1  # Replace with the actual user_id from your authentication system
+        insert_values = (user_id, name, phone)
+        cursor.execute(insert_query, insert_values)
+        db.commit()
+        cursor.close()
+
+        return jsonify({"message": "Emergency contact added successfully!"}), 201
+
+    except Error as e:
+        return jsonify({"error": str(e)}), 500
+@app.route('/emergency_contacts', methods=['GET'])
+def get_emergency_contacts():
+    user_id = request.args.get('user_id')
+    try:
+        cursor = db.cursor(dictionary=True)
+        query = "SELECT * FROM emergency_contacts"
+        cursor.execute(query)
+        contacts = cursor.fetchall()
+        cursor.close()
+
+        return jsonify(contacts), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+#todolist
+
+@app.route('/todos', methods=['GET'])
+def get_todos():
+    user_id = request.args.get('user_id')
+    try:
+        cursor = db.cursor(dictionary=True)
+        query = "SELECT * FROM todos WHERE user_id = %s"
+        cursor.execute(query, (user_id,))
+        todos = cursor.fetchall()
+        cursor.close()
+        return jsonify(todos), 200
+    except Error as e:
+        return handle_db_error(f"Database error: {str(e)}")
+
+@app.route('/todos', methods=['POST'])
+def add_todo():
+    data = request.json
+    try:
+        cursor = db.cursor()
+        query = "INSERT INTO todos (user_id, todo) VALUES (%s, %s)"
+        values = (data['user_id'], data['todo'])
+        cursor.execute(query, values)
+        db.commit()
+        cursor.close()
+        return jsonify({"message": "Todo added successfully!"}), 201
+    except Error as e:
+        db.rollback()
+        return handle_db_error(f"Database error: {str(e)}")
 if __name__ == '__main__':
     app.run(debug=True)

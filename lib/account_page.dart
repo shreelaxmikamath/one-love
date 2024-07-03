@@ -68,7 +68,10 @@ class _AccountPageState extends State<AccountPage> {
           title: Text('Edit Profile'),
           content: _EditProfileForm(
             profileData: _profileData,
-            onSave: _updateProfileDetails,
+            onSave: (updatedProfileData) {
+              _saveProfile(updatedProfileData); // Pass updatedProfileData to _saveProfile
+              Navigator.of(context).pop();
+            },
           ),
           actions: <Widget>[
             TextButton(
@@ -77,35 +80,13 @@ class _AccountPageState extends State<AccountPage> {
               },
               child: Text('Cancel'),
             ),
-            TextButton(
-              onPressed: () {
-                _saveProfile(); // Call _saveProfile method to initiate saving
-                Navigator.of(context).pop();
-              },
-              child: Text('Save'),
-            ),
           ],
         );
       },
     );
   }
 
-  void _saveProfile() {
-    // Prepare updated profile data
-    Map<String, dynamic> updatedProfileData = {
-      'user_id': _profileData['user_id'],
-      'full_name': _profileData['full_name'],
-      'username': _profileData['username'],
-      'email': _profileData['email'],
-      'contact_number': _profileData['contact_number'],
-      'age': int.tryParse(_profileData['age']) ?? 0,  // Ensure 'age' is parsed to int
-      'weight': int.tryParse(_profileData['weight']) ?? 0,  // Ensure 'weight' is parsed to int
-      'height': int.tryParse(_profileData['height']) ?? 0,  // Ensure 'height' is parsed to int
-      'diet': _profileData['diet'],
-      'months': int.tryParse(_profileData['months']) ?? 0,  // Ensure 'months' is parsed to int
-      'children': int.tryParse(_profileData['children']) ?? 0,  // Ensure 'children' is parsed to int
-    };
-
+  void _saveProfile(Map<String, dynamic> updatedProfileData) {
     // Call onSave method to update profile details
     _updateProfileDetails(updatedProfileData);
   }
@@ -297,23 +278,14 @@ class __EditProfileFormState extends State<_EditProfileForm> {
               widget.profileData['children'] = value; // Update profileData
             },
           ),
+          ElevatedButton(
+            onPressed: () {
+              widget.onSave(widget.profileData); // Call onSave with updated profileData
+            },
+            child: Text('Save'),
+          ),
         ],
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _fullNameController.dispose();
-    _usernameController.dispose();
-    _emailController.dispose();
-    _contactNumberController.dispose();
-    _ageController.dispose();
-    _weightController.dispose();
-    _heightController.dispose();
-    _dietController.dispose();
-    _monthsController.dispose();
-    _childrenController.dispose();
-    super.dispose();
   }
 }

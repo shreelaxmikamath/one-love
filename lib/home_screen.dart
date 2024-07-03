@@ -116,7 +116,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('One-Love'),
+        title: Text('One Love'),
         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.calendar_today),
