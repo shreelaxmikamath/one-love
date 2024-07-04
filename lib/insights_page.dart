@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'appointments_page.dart';
 import 'prescriptions_page.dart';
+import 'bookings_page.dart'; // Import the bookings page
 
 class InsightsPage extends StatelessWidget {
   @override
@@ -22,6 +23,16 @@ class InsightsPage extends StatelessWidget {
                 );
               },
               child: Text('Book Appointment'),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => BookingsPage()),
+                );
+              },
+              child: Text('View Bookings'), // Moved before View Prescriptions
             ),
             SizedBox(height: 20),
             ElevatedButton(
