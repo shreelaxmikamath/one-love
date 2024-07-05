@@ -70,10 +70,32 @@ def login():
     finally:
         cursor.close()
 
+@app.route('/user_info', methods=['GET'])
+def user_info():
+    user_id = request.args.get('user_id')
+    try:
+        cursor = db.cursor(dictionary=True)
+        query = """
+        SELECT u.full_name, u.username, u.email, u.contact_number,
+               p.age, p.weight, p.height, p.diet, p.months, p.children
+        FROM users u
+        LEFT JOIN user_profiles p ON u.id = p.user_id
+        WHERE u.id = %s
+        """
+        cursor.execute(query, (user_id,))
+        user_info = cursor.fetchone()
+        if user_info:
+            return jsonify(user_info), 200
+        else:
+            return jsonify({"message": "User not found!"}), 404
+    except Error as e:
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
+    finally:
+        cursor.close()
+
 @app.route('/save_profile', methods=['POST'])
 def save_profile():
     data = request.json
-    print('Received Profile Data:', data)  # Debug print
     try:
         cursor = db.cursor()
 
@@ -84,53 +106,45 @@ def save_profile():
         WHERE id = %s
         """
         user_update_values = (
-            data['full_name'], data['username'], data['email'], data['contact_number'], data['user_id']
+            data['full_name'], data['username'], data['email'],
+            data['contact_number'], data['user_id']
         )
         cursor.execute(user_update_query, user_update_values)
 
-        # Insert or update user profile information
-        profile_update_query = """
-        INSERT INTO user_profiles (user_id, age, weight, height, diet, months, children)
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
-        ON DUPLICATE KEY UPDATE
-        age=VALUES(age), weight=VALUES(weight), height=VALUES(height),
-        diet=VALUES(diet), months=VALUES(months), children=VALUES(children)
-        """
-        profile_update_values = (
-            data['user_id'], data['age'], data['weight'],
-            data['height'], data['diet'], data['months'], data['children']
-        )
-        cursor.execute(profile_update_query, profile_update_values)
+        # Check if user profile exists
+        profile_check_query = "SELECT id FROM user_profiles WHERE user_id = %s"
+        cursor.execute(profile_check_query, (data['user_id'],))
+        profile = cursor.fetchone()
 
+        if profile:
+            # Update user profile information if it exists
+            profile_update_query = """
+            UPDATE user_profiles
+            SET age = %s, weight = %s, height = %s, diet = %s, months = %s, children = %s
+            WHERE user_id = %s
+            """
+            profile_update_values = (
+                data['age'], data['weight'], data['height'],
+                data['diet'], data['months'], data['children'], data['user_id']
+            )
+        else:
+            # Insert user profile information if it does not exist
+            profile_update_query = """
+            INSERT INTO user_profiles
+            (user_id, age, weight, height, diet, months, children)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """
+            profile_update_values = (
+                data['user_id'], data['age'], data['weight'], data['height'],
+                data['diet'], data['months'], data['children']
+            )
+
+        cursor.execute(profile_update_query, profile_update_values)
         db.commit()
         return jsonify({"message": "Profile updated successfully!"}), 200
-    except KeyError as e:
-        return handle_db_error(f"Missing required field: {str(e)}")
     except Error as e:
         db.rollback()
-        return handle_db_error(f"Database error: {str(e)}")
-    finally:
-        cursor.close()
-
-@app.route('/user_info', methods=['GET'])
-def user_info():
-    user_id = request.args.get('user_id')
-    try:
-        cursor = db.cursor(dictionary=True)
-        query = """
-        SELECT u.full_name, u.username, u.email, u.contact_number, p.age, p.weight, p.height, p.diet, p.months, p.children
-        FROM users u
-        LEFT JOIN user_profiles p ON u.id = p.user_id
-        WHERE u.id=%s
-        """
-        cursor.execute(query, (user_id,))
-        user_info = cursor.fetchone()
-        if user_info:
-            return jsonify(user_info), 200
-        else:
-            return jsonify({"message": "User not found!"}), 404
-    except Error as e:
-        return handle_db_error(f"Database error: {str(e)}")
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
     finally:
         cursor.close()
 

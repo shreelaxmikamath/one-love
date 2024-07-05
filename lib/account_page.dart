@@ -12,171 +12,10 @@ class AccountPage extends StatefulWidget {
 }
 
 class _AccountPageState extends State<AccountPage> {
-  late Future<Map<String, dynamic>> _profileDetails;
-  late Map<String, dynamic> _profileData;
+  bool _isEditing = false;
+  Map<String, dynamic>? _userInfo;
+  bool _isLoading = true;
 
-  @override
-  void initState() {
-    super.initState();
-    _profileDetails = _loadProfileDetails();
-  }
-
-  Future<Map<String, dynamic>> _loadProfileDetails() async {
-    try {
-      var response = await http.get(
-        Uri.parse('http://10.0.2.2:5000/user_info?user_id=${widget.userId}'),
-        headers: {"Content-Type": "application/json"},
-      );
-
-      if (response.statusCode == 200) {
-        _profileData = json.decode(response.body);
-        return _profileData;
-      } else {
-        throw Exception('Failed to load profile details');
-      }
-    } catch (e) {
-      throw Exception('Error: $e');
-    }
-  }
-
-  Future<void> _updateProfileDetails(Map<String, dynamic> updatedProfileData) async {
-    try {
-      var response = await http.post(
-        Uri.parse('http://10.0.2.2:5000/save_profile'),
-        headers: {"Content-Type": "application/json"},
-        body: json.encode(updatedProfileData),
-      );
-
-      if (response.statusCode == 200) {
-        setState(() {
-          _profileData = updatedProfileData;
-          _profileDetails = Future.value(updatedProfileData);
-        });
-      } else {
-        throw Exception('Failed to update profile');
-      }
-    } catch (e) {
-      throw Exception('Error: $e');
-    }
-  }
-
-  void _editProfile() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Edit Profile'),
-          content: _EditProfileForm(
-            profileData: _profileData,
-            onSave: (updatedProfileData) {
-              _saveProfile(updatedProfileData); // Pass updatedProfileData to _saveProfile
-              Navigator.of(context).pop();
-            },
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('Cancel'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _saveProfile(Map<String, dynamic> updatedProfileData) {
-    // Call onSave method to update profile details
-    _updateProfileDetails(updatedProfileData);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Account'),
-        actions: <Widget>[
-          IconButton(
-            icon: Icon(Icons.edit),
-            onPressed: _editProfile,
-          ),
-        ],
-      ),
-      body: FutureBuilder<Map<String, dynamic>>(
-        future: _profileDetails,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else {
-            var profileData = snapshot.data!;
-            return Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ListView(
-                children: <Widget>[
-                  ListTile(
-                    title: Text('Full Name'),
-                    subtitle: Text(profileData['full_name'] ?? 'N/A'),
-                  ),
-                  ListTile(
-                    title: Text('Username'),
-                    subtitle: Text(profileData['username'] ?? 'N/A'),
-                  ),
-                  ListTile(
-                    title: Text('Email'),
-                    subtitle: Text(profileData['email'] ?? 'N/A'),
-                  ),
-                  ListTile(
-                    title: Text('Contact Number'),
-                    subtitle: Text(profileData['contact_number'] ?? 'N/A'),
-                  ),
-                  ListTile(
-                    title: Text('Age'),
-                    subtitle: Text(profileData['age']?.toString() ?? 'N/A'),
-                  ),
-                  ListTile(
-                    title: Text('Weight'),
-                    subtitle: Text(profileData['weight']?.toString() ?? 'N/A'),
-                  ),
-                  ListTile(
-                    title: Text('Height'),
-                    subtitle: Text(profileData['height']?.toString() ?? 'N/A'),
-                  ),
-                  ListTile(
-                    title: Text('Diet'),
-                    subtitle: Text(profileData['diet'] ?? 'N/A'),
-                  ),
-                  ListTile(
-                    title: Text('Months'),
-                    subtitle: Text(profileData['months']?.toString() ?? 'N/A'),
-                  ),
-                  ListTile(
-                    title: Text('Children'),
-                    subtitle: Text(profileData['children']?.toString() ?? 'N/A'),
-                  ),
-                ],
-              ),
-            );
-          }
-        },
-      ),
-    );
-  }
-}
-
-class _EditProfileForm extends StatefulWidget {
-  final Map<String, dynamic> profileData;
-  final Function(Map<String, dynamic>) onSave;
-
-  _EditProfileForm({required this.profileData, required this.onSave});
-
-  @override
-  __EditProfileFormState createState() => __EditProfileFormState();
-}
-
-class __EditProfileFormState extends State<_EditProfileForm> {
   late TextEditingController _fullNameController;
   late TextEditingController _usernameController;
   late TextEditingController _emailController;
@@ -191,100 +30,177 @@ class __EditProfileFormState extends State<_EditProfileForm> {
   @override
   void initState() {
     super.initState();
-    _fullNameController = TextEditingController(text: widget.profileData['full_name'] ?? '');
-    _usernameController = TextEditingController(text: widget.profileData['username'] ?? '');
-    _emailController = TextEditingController(text: widget.profileData['email'] ?? '');
-    _contactNumberController = TextEditingController(text: widget.profileData['contact_number'] ?? '');
-    _ageController = TextEditingController(text: widget.profileData['age']?.toString() ?? '');
-    _weightController = TextEditingController(text: widget.profileData['weight']?.toString() ?? '');
-    _heightController = TextEditingController(text: widget.profileData['height']?.toString() ?? '');
-    _dietController = TextEditingController(text: widget.profileData['diet'] ?? '');
-    _monthsController = TextEditingController(text: widget.profileData['months']?.toString() ?? '');
-    _childrenController = TextEditingController(text: widget.profileData['children']?.toString() ?? '');
+    _fetchUserInfo();
+  }
+
+  Future<void> _fetchUserInfo() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:5000/user_info?user_id=${widget.userId}'),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _userInfo = json.decode(response.body);
+          _initControllers();
+          _isLoading = false;
+        });
+      } else {
+        print('Failed to load user info');
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Error fetching user info: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _initControllers() {
+    _fullNameController = TextEditingController(text: _userInfo?['full_name'] ?? '');
+    _usernameController = TextEditingController(text: _userInfo?['username'] ?? '');
+    _emailController = TextEditingController(text: _userInfo?['email'] ?? '');
+    _contactNumberController = TextEditingController(text: _userInfo?['contact_number'] ?? '');
+    _ageController = TextEditingController(text: _userInfo?['age']?.toString() ?? '');
+    _weightController = TextEditingController(text: _userInfo?['weight']?.toString() ?? '');
+    _heightController = TextEditingController(text: _userInfo?['height']?.toString() ?? '');
+    _dietController = TextEditingController(text: _userInfo?['diet'] ?? '');
+    _monthsController = TextEditingController(text: _userInfo?['months']?.toString() ?? '');
+    _childrenController = TextEditingController(text: _userInfo?['children']?.toString() ?? '');
+  }
+
+  Widget _buildInfoRow(String label, String? value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(fontWeight: FontWeight.bold)),
+          Text(value ?? 'N/A'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEditableRow(String label, TextEditingController controller) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: TextField(
+        controller: controller,
+        decoration: InputDecoration(labelText: label),
+      ),
+    );
+  }
+
+  Future<void> _saveChanges() async {
+    final updatedInfo = {
+      "user_id": widget.userId,
+      "full_name": _fullNameController.text,
+      "username": _usernameController.text,
+      "email": _emailController.text,
+      "contact_number": _contactNumberController.text,
+      "age": _ageController.text,
+      "weight": _weightController.text,
+      "height": _heightController.text,
+      "diet": _dietController.text,
+      "months": _monthsController.text,
+      "children": _childrenController.text,
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:5000/save_profile'),
+        headers: {"Content-Type": "application/json"},
+        body: json.encode(updatedInfo),
+      );
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Profile updated successfully')),
+        );
+        setState(() {
+          _isEditing = false;
+          _fetchUserInfo(); // Refresh the user info
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update profile')),
+        );
+      }
+    } catch (e) {
+      print('Error saving profile: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('An error occurred while saving')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
-        children: <Widget>[
-          TextField(
-            controller: _fullNameController,
-            decoration: InputDecoration(labelText: 'Full Name'),
-            onChanged: (value) {
-              widget.profileData['full_name'] = value; // Update profileData
-            },
-          ),
-          TextField(
-            controller: _usernameController,
-            decoration: InputDecoration(labelText: 'Username'),
-            onChanged: (value) {
-              widget.profileData['username'] = value; // Update profileData
-            },
-          ),
-          TextField(
-            controller: _emailController,
-            decoration: InputDecoration(labelText: 'Email'),
-            onChanged: (value) {
-              widget.profileData['email'] = value; // Update profileData
-            },
-          ),
-          TextField(
-            controller: _contactNumberController,
-            decoration: InputDecoration(labelText: 'Contact Number'),
-            onChanged: (value) {
-              widget.profileData['contact_number'] = value; // Update profileData
-            },
-          ),
-          TextField(
-            controller: _ageController,
-            decoration: InputDecoration(labelText: 'Age'),
-            onChanged: (value) {
-              widget.profileData['age'] = value; // Update profileData
-            },
-          ),
-          TextField(
-            controller: _weightController,
-            decoration: InputDecoration(labelText: 'Weight'),
-            onChanged: (value) {
-              widget.profileData['weight'] = value; // Update profileData
-            },
-          ),
-          TextField(
-            controller: _heightController,
-            decoration: InputDecoration(labelText: 'Height'),
-            onChanged: (value) {
-              widget.profileData['height'] = value; // Update profileData
-            },
-          ),
-          TextField(
-            controller: _dietController,
-            decoration: InputDecoration(labelText: 'Diet'),
-            onChanged: (value) {
-              widget.profileData['diet'] = value; // Update profileData
-            },
-          ),
-          TextField(
-            controller: _monthsController,
-            decoration: InputDecoration(labelText: 'Months'),
-            onChanged: (value) {
-              widget.profileData['months'] = value; // Update profileData
-            },
-          ),
-          TextField(
-            controller: _childrenController,
-            decoration: InputDecoration(labelText: 'Children'),
-            onChanged: (value) {
-              widget.profileData['children'] = value; // Update profileData
-            },
-          ),
-          ElevatedButton(
-            onPressed: () {
-              widget.onSave(widget.profileData); // Call onSave with updated profileData
-            },
-            child: Text('Save'),
-          ),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Account'),
+        actions: [
+          if (!_isLoading && _userInfo != null)
+            IconButton(
+              icon: Icon(_isEditing ? Icons.cancel : Icons.edit),
+              onPressed: () {
+                setState(() {
+                  _isEditing = !_isEditing;
+                  if (!_isEditing) {
+                    _fetchUserInfo(); // Reset to original values if cancelling
+                  }
+                });
+              },
+            ),
         ],
+      ),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : _userInfo == null
+          ? Center(child: Text('Failed to load user information'))
+          : SingleChildScrollView(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (_isEditing) ...[
+              _buildEditableRow('Full Name', _fullNameController),
+              _buildEditableRow('Username', _usernameController),
+              _buildEditableRow('Email', _emailController),
+              _buildEditableRow('Contact Number', _contactNumberController),
+              _buildEditableRow('Age', _ageController),
+              _buildEditableRow('Weight', _weightController),
+              _buildEditableRow('Height', _heightController),
+              _buildEditableRow('Diet', _dietController),
+              _buildEditableRow('Months', _monthsController),
+              _buildEditableRow('Children', _childrenController),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _saveChanges,
+                child: Text('Save Changes'),
+              ),
+            ] else ...[
+              _buildInfoRow('Full Name', _userInfo?['full_name']),
+              _buildInfoRow('Username', _userInfo?['username']),
+              _buildInfoRow('Email', _userInfo?['email']),
+              _buildInfoRow('Contact Number', _userInfo?['contact_number']),
+              _buildInfoRow('Age', _userInfo?['age']?.toString()),
+              _buildInfoRow('Weight', _userInfo?['weight']?.toString()),
+              _buildInfoRow('Height', _userInfo?['height']?.toString()),
+              _buildInfoRow('Diet', _userInfo?['diet']),
+              _buildInfoRow('Months', _userInfo?['months']?.toString()),
+              _buildInfoRow('Children', _userInfo?['children']?.toString()),
+            ],
+          ],
+        ),
       ),
     );
   }
