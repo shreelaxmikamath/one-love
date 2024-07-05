@@ -23,17 +23,7 @@ class OthersPage extends StatelessWidget {
               child: Text('Go to Checklist'),
             ),
             SizedBox(height: 20.0),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => EmergencyContactsPage(), // Navigate to EmergencyContactsPage
-                  ),
-                );
-              },
-              child: Text('Emergency Contacts'),
-            ),
+
           ],
         ),
       ),
