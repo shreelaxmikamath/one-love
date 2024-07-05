@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'shopping_preparation_checklists.dart';
-import 'emergency_contacts.dart'; // Import the new page
+import 'checklist.dart';  // Import the checklist.dart file
 
 class OthersPage extends StatelessWidget {
   @override
@@ -23,7 +22,6 @@ class OthersPage extends StatelessWidget {
               child: Text('Go to Checklist'),
             ),
             SizedBox(height: 20.0),
-
           ],
         ),
       ),
