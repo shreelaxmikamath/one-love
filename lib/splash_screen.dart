@@ -26,13 +26,10 @@ class _SplashScreenState extends State<SplashScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       body: Center(
-        child: Text(
-          'One Love',
-          style: TextStyle(
-            fontSize: 48,
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+        child: Image.asset(
+          'assets/onelove-logo.png',
+          height: 400.0,  // specify the desired height
+          width: 300.0,   // specify the desired width
         ),
       ),
     );

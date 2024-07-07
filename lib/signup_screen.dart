@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 import 'profile_prompt_screen.dart';
 
 class SignupScreen extends StatelessWidget {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController contactNumberController = TextEditingController();
   final TextEditingController fullNameController = TextEditingController();
+  final TextEditingController contactNumberController = TextEditingController();
+  String initialCountry = 'IN'; // Initial selected country code
 
   @override
   Widget build(BuildContext context) {
@@ -17,29 +19,47 @@ class SignupScreen extends StatelessWidget {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             TextField(
               controller: usernameController,
               decoration: InputDecoration(labelText: 'Username'),
             ),
+            SizedBox(height: 12), // Added space
             TextField(
               controller: fullNameController,
               decoration: InputDecoration(labelText: 'Full Name'),
             ),
+            SizedBox(height: 12), // Added space
             TextField(
               controller: emailController,
               decoration: InputDecoration(labelText: 'Email'),
             ),
+            SizedBox(height: 12), // Added space
             TextField(
               controller: passwordController,
               decoration: InputDecoration(labelText: 'Password'),
               obscureText: true,
             ),
-            TextField(
-              controller: contactNumberController,
-              decoration: InputDecoration(labelText: 'Contact Number'),
+            SizedBox(height: 12), // Added space
+            InternationalPhoneNumberInput(
+              onInputChanged: (PhoneNumber number) {
+                print(number.phoneNumber);
+              },
+              selectorConfig: SelectorConfig(
+                selectorType: PhoneInputSelectorType.BOTTOM_SHEET,
+              ),
+              ignoreBlank: false,
+              autoValidateMode: AutovalidateMode.disabled,
+              selectorTextStyle: TextStyle(color: Colors.black),
+              initialValue: PhoneNumber(isoCode: initialCountry),
+              textFieldController: contactNumberController,
+              inputDecoration: InputDecoration(
+                labelText: 'Contact Number',
+                border: OutlineInputBorder(),
+              ),
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 20), // Larger space before the button
             ElevatedButton(
               onPressed: () async {
                 // Validate input fields
@@ -52,15 +72,6 @@ class SignupScreen extends StatelessWidget {
                     content: Text("Please fill in all fields."),
                   ));
                   return; // Exit function if any field is empty
-                }
-
-                // Validate contact number (must be 10 digits)
-                if (contactNumberController.text.length != 10 ||
-                    !RegExp(r'^[0-9]+$').hasMatch(contactNumberController.text)) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text("Contact number must be a 10-digit number."),
-                  ));
-                  return;
                 }
 
                 // Validate email format

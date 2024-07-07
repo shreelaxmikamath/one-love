@@ -309,26 +309,6 @@ def delete_category():
     finally:
         cursor.close()
 
-@app.route('/delete_category', methods=['DELETE'])
-def delete_category():
-    data = request.json
-    try:
-        cursor = db.cursor()
-        # Delete category
-        delete_category_query = "DELETE FROM checklists WHERE id = %s"
-        cursor.execute(delete_category_query, (data['category_id'],))
-
-        # Also delete associated items
-        delete_items_query = "DELETE FROM checklist_items WHERE checklist_id = %s"
-        cursor.execute(delete_items_query, (data['category_id'],))
-
-        db.commit()
-        return jsonify({"message": "Category deleted successfully!"}), 200
-    except Error as e:
-        db.rollback()
-        return handle_db_error(f"Database error: {str(e)}")
-    finally:
-        cursor.close()
 
 
 @app.route('/add_item', methods=['POST'])
@@ -381,4 +361,3 @@ def toggle_item():
 
 if __name__ == '__main__':
     app.run(debug=True)
-
