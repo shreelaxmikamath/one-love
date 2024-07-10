@@ -11,6 +11,7 @@ class SignupScreen extends StatelessWidget {
   final TextEditingController fullNameController = TextEditingController();
   final TextEditingController contactNumberController = TextEditingController();
   String initialCountry = 'IN'; // Initial selected country code
+  PhoneNumber number = PhoneNumber(isoCode: 'IN');
 
   @override
   Widget build(BuildContext context) {
@@ -52,12 +53,14 @@ class SignupScreen extends StatelessWidget {
               ignoreBlank: false,
               autoValidateMode: AutovalidateMode.disabled,
               selectorTextStyle: TextStyle(color: Colors.black),
-              initialValue: PhoneNumber(isoCode: initialCountry),
+              initialValue: number,
               textFieldController: contactNumberController,
               inputDecoration: InputDecoration(
                 labelText: 'Contact Number',
                 border: OutlineInputBorder(),
               ),
+              formatInput: false, // Disable auto-formatting
+              maxLength: 10, // Limit to 10 digits
             ),
             SizedBox(height: 20), // Larger space before the button
             ElevatedButton(
@@ -67,20 +70,21 @@ class SignupScreen extends StatelessWidget {
                     fullNameController.text.isEmpty ||
                     emailController.text.isEmpty ||
                     passwordController.text.isEmpty ||
-                    contactNumberController.text.isEmpty) {
+                    contactNumberController.text.isEmpty ||
+                    !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(emailController.text) ||
+                    !RegExp(r'^[0-9]{10}$').hasMatch(contactNumberController.text)) {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text("Please fill in all fields."),
+                    content: Text("Please fill in all fields correctly."),
                   ));
-                  return; // Exit function if any field is empty
+                  return; // Exit function if any field is empty or format is incorrect
                 }
 
-                // Validate email format
-                if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(emailController.text)) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text("Invalid email format."),
-                  ));
-                  return;
-                }
+                // Debug print statements for input values
+                print('Username: ${usernameController.text}');
+                print('Full Name: ${fullNameController.text}');
+                print('Email: ${emailController.text}');
+                print('Password: ${passwordController.text}');
+                print('Contact Number: ${contactNumberController.text}');
 
                 var signupData = {
                   "username": usernameController.text,
@@ -131,4 +135,10 @@ class SignupScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+void main() {
+  runApp(MaterialApp(
+    home: SignupScreen(),
+  ));
 }

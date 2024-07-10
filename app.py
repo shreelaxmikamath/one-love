@@ -20,13 +20,16 @@ except Error as e:
 def handle_db_error(error_message):
     return jsonify({"error": error_message}), 500
 
-
 @app.route('/signup', methods=['POST'])
 def signup():
     data = request.json
     print('Received Signup Data:', data)  # Debug print
     try:
         cursor = db.cursor()
+
+        # Validate contact number format
+        if not data['contact_number'].isdigit() or len(data['contact_number']) != 10:
+            return jsonify({"error": "Invalid contact number format. It should be a 10-digit number."}), 400
 
         # Insert user into users table
         user_insert_query = """
@@ -148,7 +151,6 @@ def save_profile():
     finally:
         cursor.close()
 
-
 @app.route('/save_note', methods=['POST'])
 def save_note():
     data = request.json
@@ -226,7 +228,8 @@ def notifications():
         return jsonify(notifications), 200
     else:
         return jsonify({"message": "No notifications found!"}), 404
-#emergency contact
+
+# Emergency contact
 @app.route('/emergency_contact', methods=['POST'])
 def add_emergency_contact():
     try:
@@ -238,6 +241,10 @@ def add_emergency_contact():
         # Check if name and phone are provided
         if not name or not phone:
             return jsonify({"error": "Both name and phone are required"}), 400
+
+        # Validate phone number format
+        if not phone.isdigit() or len(phone) != 10:
+            return jsonify({"error": "Invalid phone number format. It should be a 10-digit number."}), 400
 
         # Insert emergency contact into database
         cursor = db.cursor()
@@ -254,15 +261,15 @@ def add_emergency_contact():
         return jsonify({"message": "Emergency contact added successfully!"}), 201
 
     except Error as e:
-        return jsonify({"error": str(e)}),
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/emergency_contacts', methods=['GET'])
 def get_emergency_contacts():
     user_id = request.args.get('user_id')
     try:
         cursor = db.cursor(dictionary=True)
-        query = "SELECT * FROM emergency_contacts"
-        cursor.execute(query)
+        query = "SELECT * FROM emergency_contacts WHERE user_id = %s"
+        cursor.execute(query, (user_id,))
         contacts = cursor.fetchall()
         cursor.close()
 
@@ -270,8 +277,8 @@ def get_emergency_contacts():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-#todolist
 
+# To-do list
 @app.route('/add_category', methods=['POST'])
 def add_category():
     data = request.json
@@ -286,7 +293,6 @@ def add_category():
         return handle_db_error(f"Database error: {str(e)}")
     finally:
         cursor.close()
-
 
 @app.route('/delete_category', methods=['DELETE'])
 def delete_category():
@@ -309,8 +315,6 @@ def delete_category():
     finally:
         cursor.close()
 
-
-
 @app.route('/add_item', methods=['POST'])
 def add_item():
     data = request.json
@@ -325,7 +329,6 @@ def add_item():
         return handle_db_error(f"Database error: {str(e)}")
     finally:
         cursor.close()
-
 
 @app.route('/delete_item', methods=['DELETE'])
 def delete_item():
@@ -356,8 +359,6 @@ def toggle_item():
         return handle_db_error(f"Database error: {str(e)}")
     finally:
         cursor.close()
-
-
 
 if __name__ == '__main__':
     app.run(debug=True)
