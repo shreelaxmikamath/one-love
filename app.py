@@ -378,6 +378,20 @@ def update_item(item_id):
         return jsonify({"error": f"Database error: {str(e)}"}), 500
     finally:
         cursor.close()
-
+@app.route('/delete_account', methods=['DELETE'])
+def delete_account():
+    data = request.json
+    try:
+        cursor = db.cursor()
+        # Delete user from the users table
+        delete_user_query = "DELETE FROM users WHERE id = %s"
+        cursor.execute(delete_user_query, (data['user_id'],))
+        db.commit()
+        return jsonify({"message": "Account deleted successfully!"}), 200
+    except Error as e:
+        db.rollback()
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
+    finally:
+        cursor.close()
 if __name__ == '__main__':
     app.run(debug=True)

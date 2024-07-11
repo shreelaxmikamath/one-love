@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'login_screen.dart'; // Import your login screen file
+import 'login_screen.dart';
+import 'main.dart'; // Import MyApp to access the themeNotifier
+import 'themes.dart'; // Import themes
 
 class AccountPage extends StatefulWidget {
   final String userId;
@@ -143,8 +145,49 @@ class _AccountPageState extends State<AccountPage> {
     }
   }
 
+  Future<void> _deleteAccount() async {
+    try {
+      final response = await http.delete(
+        Uri.parse('http://10.0.2.2:5000/delete_account'),
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({"user_id": widget.userId}),
+      );
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Account deleted successfully')),
+        );
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => LoginScreen()),
+              (route) => false,
+        );
+      } else {
+        try {
+          final responseData = json.decode(response.body);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to delete account: ${responseData['error']}')),
+          );
+          print('Failed to delete account: ${responseData['error']}');
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to delete account: Unexpected response from server')),
+          );
+          print('Failed to delete account: Unexpected response from server');
+        }
+      }
+    } catch (e) {
+      print('Error deleting account: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('An error occurred while deleting account')),
+      );
+    }
+  }
+
   void _logout() {
-    // Implement your logout logic here, e.g., clear user session, navigate to login screen
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (context) => LoginScreen()),
@@ -158,7 +201,7 @@ class _AccountPageState extends State<AccountPage> {
       appBar: AppBar(
         title: Text('Account'),
         actions: [
-          if (!_isLoading && _userInfo != null)
+          if (!_isLoading && _userInfo != null) ...[
             IconButton(
               icon: Icon(_isEditing ? Icons.cancel : Icons.edit),
               onPressed: () {
@@ -170,6 +213,33 @@ class _AccountPageState extends State<AccountPage> {
                 });
               },
             ),
+            PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'Logout') {
+                  _logout();
+                } else if (value == 'Delete Account') {
+                  _deleteAccount();
+                } else if (value == 'Change Theme') {
+                  _showThemeSelectionDialog(context);
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'Logout',
+                  child: Text('Logout'),
+                ),
+                PopupMenuItem(
+                  value: 'Delete Account',
+                  child: Text('Delete Account'),
+                ),
+                PopupMenuItem(
+                  value: 'Change Theme',
+                  child: Text('Change Theme'),
+                ),
+              ],
+              icon: Icon(Icons.settings),
+            ),
+          ],
         ],
       ),
       body: _isLoading
@@ -209,16 +279,46 @@ class _AccountPageState extends State<AccountPage> {
               _buildInfoRow('Months', _userInfo?['months']?.toString()),
               _buildInfoRow('Children', _userInfo?['children']?.toString()),
             ],
-            SizedBox(height: 20),
-            Center(
-              child: TextButton(
-                onPressed: _logout,
-                child: Text('Logout'),
-              ),
-            ),
           ],
         ),
       ),
+    );
+  }
+
+  void _showThemeSelectionDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Select Theme'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: Text('Pastel Pink Theme'),
+                onTap: () {
+                  MyApp.themeNotifier.value = pastelPinkTheme;
+                  Navigator.of(context).pop();
+                },
+              ),
+              ListTile(
+                title: Text('Pastel Blue Theme'),
+                onTap: () {
+                  MyApp.themeNotifier.value = pastelBlueTheme;
+                  Navigator.of(context).pop();
+                },
+              ),
+              ListTile(
+                title: Text('Pastel Green Theme'),
+                onTap: () {
+                  MyApp.themeNotifier.value = pastelGreenTheme;
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
