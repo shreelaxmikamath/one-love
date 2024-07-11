@@ -330,12 +330,14 @@ def delete_category(category_id):
 def get_items(user_id, category_id):
     try:
         cursor = db.cursor(dictionary=True)
-        query = "SELECT * FROM items WHERE user_id = %s AND category_id = %s"
+        query = "SELECT id, item_name, is_done FROM items WHERE user_id = %s AND category_id = %s"
         cursor.execute(query, (user_id, category_id))
         items = cursor.fetchall()
         return jsonify(items), 200
     except Error as e:
         return handle_db_error(f"Database error: {str(e)}")
+    finally:
+        cursor.close()
 
 @app.route('/items', methods=['POST'])
 def add_item():
@@ -365,13 +367,17 @@ def delete_item(item_id):
 @app.route('/items/<int:item_id>', methods=['PATCH'])
 def update_item(item_id):
     try:
+        data = request.json
         cursor = db.cursor()
         query = "UPDATE items SET is_done = %s WHERE id = %s"
-        cursor.execute(query, (request.json['is_done'], item_id))
+        cursor.execute(query, (data['is_done'], item_id))
         db.commit()
         return jsonify({"message": "Item updated successfully!"}), 200
     except Error as e:
         db.rollback()
         return jsonify({"error": f"Database error: {str(e)}"}), 500
+    finally:
+        cursor.close()
+
 if __name__ == '__main__':
     app.run(debug=True)

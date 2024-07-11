@@ -17,6 +17,7 @@ class _ChecklistPageState extends State<ChecklistPage> {
   int? _selectedCategoryId;
   final _categoryNameController = TextEditingController();
   final _itemNameController = TextEditingController();
+  Map<int, bool> _categoryVisibility = {};
 
   Future<void> _loadCategories() async {
     var url = Uri.parse('http://10.0.2.2:5000/categories/${widget.userId}');
@@ -41,6 +42,11 @@ class _ChecklistPageState extends State<ChecklistPage> {
       if (response.statusCode == 200) {
         setState(() {
           _items = jsonDecode(response.body);
+          // Ensure each item has an 'isSelected' field based on 'is_done'
+          _items = _items.map((item) => {
+            ...item,
+            'isSelected': item['is_done'] == true || item['is_done'] == 1, // Handle both boolean and integer
+          }).toList();
         });
       } else {
         throw Exception('Failed to load items');
@@ -128,7 +134,12 @@ class _ChecklistPageState extends State<ChecklistPage> {
         'is_done': isDone,
       }));
       if (response.statusCode == 200) {
-        // Item updated successfully
+        // Update the local state
+        setState(() {
+          var item = _items.firstWhere((item) => item['id'] == itemId);
+          item['isSelected'] = isDone;
+          item['is_done'] = isDone;
+        });
       } else {
         throw Exception('Failed to update item');
       }
@@ -210,6 +221,17 @@ class _ChecklistPageState extends State<ChecklistPage> {
     super.initState();
     _loadCategories();
   }
+  void _toggleCategoryVisibility(int categoryId) {
+    setState(() {
+      if (_selectedCategoryId == categoryId) {
+        _selectedCategoryId = null;
+        _items = [];
+      } else {
+        _selectedCategoryId = categoryId;
+        _loadItems(categoryId);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -221,6 +243,9 @@ class _ChecklistPageState extends State<ChecklistPage> {
             child: ListView.builder(
               itemCount: _categories.length,
               itemBuilder: (context, index) {
+                final categoryId = _categories[index]['id'];
+                final isVisible = _selectedCategoryId == categoryId;
+
                 return Card(
                   child: Column(
                     children: <Widget>[
@@ -229,7 +254,7 @@ class _ChecklistPageState extends State<ChecklistPage> {
                         trailing: IconButton(
                           icon: Icon(Icons.delete),
                           onPressed: () {
-                            _deleteCategory(_categories[index]['id']);
+                            _deleteCategory(categoryId);
                           },
                         ),
                       ),
@@ -238,50 +263,44 @@ class _ChecklistPageState extends State<ChecklistPage> {
                           IconButton(
                             icon: Icon(Icons.add),
                             onPressed: () {
-                              _showAddItemDialog(context, _categories[index]['id']);
+                              _showAddItemDialog(context, categoryId);
                             },
                           ),
                           IconButton(
-                            icon: Icon(Icons.remove_red_eye),
+                            icon: Icon(isVisible ? Icons.visibility_off : Icons.remove_red_eye),
                             onPressed: () {
-                              setState(() {
-                                _selectedCategoryId = _categories[index]['id'];
-                              });
-                              _loadItems(_categories[index]['id']);
+                              _toggleCategoryVisibility(categoryId);
                             },
                           ),
                         ],
                       ),
-                      _selectedCategoryId == _categories[index]['id']
-                          ? ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: _items.length,
-                        itemBuilder: (context, itemIndex) {
-                          return ListTile(
-                            title: Row(
-                              children: <Widget>[
-                                Checkbox(
-                                  value: _items[itemIndex]['isSelected']?? false,
-                                  onChanged: (bool? value) {
-                                    setState(() {
-                                      _items[itemIndex]['isSelected'] = value;
-                                    });
-                                    _updateItem(_items[itemIndex]['id'], value!);
-                                  },
-                                ),
-                                Text(_items[itemIndex]['item_name']),
-                              ],
-                            ),
-                            trailing: IconButton(
-                              icon: Icon(Icons.delete),
-                              onPressed: () {
-                                _deleteItem(_items[itemIndex]['id']);
-                              },
-                            ),
-                          );
-                        },
-                      )
-                          : Container(),
+                      if (isVisible)
+                        ListView.builder(
+                          shrinkWrap: true,
+                          physics: NeverScrollableScrollPhysics(),
+                          itemCount: _items.length,
+                          itemBuilder: (context, itemIndex) {
+                            return ListTile(
+                              title: Row(
+                                children: <Widget>[
+                                  Checkbox(
+                                    value: _items[itemIndex]['isSelected'] == true || _items[itemIndex]['isSelected'] == 1,
+                                    onChanged: (bool? value) {
+                                      _updateItem(_items[itemIndex]['id'], value ?? false);
+                                    },
+                                  ),
+                                  Text(_items[itemIndex]['item_name']),
+                                ],
+                              ),
+                              trailing: IconButton(
+                                icon: Icon(Icons.delete),
+                                onPressed: () {
+                                  _deleteItem(_items[itemIndex]['id']);
+                                },
+                              ),
+                            );
+                          },
+                        ),
                     ],
                   ),
                 );

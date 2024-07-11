@@ -135,24 +135,7 @@ CREATE TABLE `notes` (
   CONSTRAINT `fk_notes_users` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE categories (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL,
-  category_name VARCHAR(100) NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id)
-);
 
-CREATE TABLE items (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL,
-  category_id INT NOT NULL,
-  item_name VARCHAR(100) NOT NULL,
-  checked BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id),
-  FOREIGN KEY (category_id) REFERENCES categories(id)
-);
 
 CREATE TABLE categories (
     id INT AUTO_INCREMENT,
@@ -173,6 +156,7 @@ CREATE TABLE items (
     FOREIGN KEY (category_id) REFERENCES categories (id)
 );
 
+ALTER TABLE items ADD COLUMN is_done BOOLEAN DEFAULT FALSE;
 
 CREATE TABLE emergency_contacts (
     id INT AUTO_INCREMENT PRIMARY KEY,
