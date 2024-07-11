@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'appointments_page.dart';
 import 'prescriptions_page.dart';
+import 'appointments_list_page.dart'; // Import the new dummy file
 
 class InsightsPage extends StatelessWidget {
   final String userId;
@@ -70,9 +71,12 @@ class InsightsPage extends StatelessWidget {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10.0),
                       ),
-                      title: Text('Another Box'),
+                      title: Text('View Appointments'), // New tab
                       onTap: () {
-                        // Replace with navigation logic for another page
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => AppointmentsListPage(userId: userId)), // Navigate to the new dummy page
+                        );
                       },
                     ),
                   ),

@@ -195,6 +195,9 @@ CREATE TABLE booked_appointments (
     FOREIGN KEY (user_id) REFERENCES users(id),  -- Adjust based on your users table
     FOREIGN KEY (doctor_id) REFERENCES doctors(id)  -- Adjust based on your doctors table
 );
+ALTER TABLE booked_appointments
+ADD COLUMN status VARCHAR(50);
+
 
 CREATE TABLE prescriptions (
     id INT AUTO_INCREMENT PRIMARY KEY,

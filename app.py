@@ -459,25 +459,6 @@ def book_appointment():
         if 'cursor' in locals() and cursor is not None:
             cursor.close()
 
-@app.route('/appointments', methods=['GET'])
-def get_appointments():
-    user_id = request.args.get('user_id')
-    try:
-        cursor = db.cursor(dictionary=True)
-        query = """
-        SELECT ba.id, d.name as doctor_name, ba.appointment_date, ba.appointment_time, ba.reason
-        FROM booked_appointments ba
-        INNER JOIN doctors d ON ba.doctor_id = d.id
-        WHERE ba.user_id = %s
-        """
-        cursor.execute(query, (user_id,))
-        appointments = cursor.fetchall()
-        cursor.close()
-
-        return jsonify(appointments), 200
-
-    except Error as e:
-        return handle_db_error(f"Database error: {str(e)}")
 
 
 @app.route('/get_prescriptions', methods=['GET'])
@@ -495,6 +476,40 @@ def get_prescriptions():
         prescriptions = cursor.fetchall()
         cursor.close()
         return jsonify(prescriptions), 200
+
+    except Error as e:
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
+
+
+@app.route('/get_appointments', methods=['GET'])
+def get_appointments():
+    user_id = request.args.get('user_id')
+
+    if not user_id:
+        return jsonify({"error": "user_id is required"}), 400
+
+    try:
+        cursor = db.cursor(dictionary=True)
+        query = """
+        SELECT ba.id, ba.appointment_date, ba.appointment_time, ba.status, d.name as doctor_name
+        FROM booked_appointments ba
+        JOIN doctors d ON ba.doctor_id = d.id
+        WHERE ba.user_id = %s
+        """
+        cursor.execute(query, (user_id,))
+        appointments = cursor.fetchall()
+        cursor.close()
+        db.close()
+
+        # Debugging output to check data before returning
+        print("Appointments fetched:", appointments)
+
+        # Ensure all fields are JSON serializable
+        for appointment in appointments:
+            appointment['appointment_date'] = str(appointment['appointment_date'])
+            appointment['appointment_time'] = str(appointment['appointment_time'])
+
+        return jsonify(appointments), 200
 
     except Error as e:
         return jsonify({"error": f"Database error: {str(e)}"}), 500
