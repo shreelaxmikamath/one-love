@@ -1,6 +1,23 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'dart:convert';
 import 'package:http/http.dart' as http;
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Checklist App',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: ChecklistPage(userId: 1), // Replace with your user ID logic
+    );
+  }
+}
 
 class ChecklistPage extends StatefulWidget {
   final int userId;
@@ -12,309 +29,311 @@ class ChecklistPage extends StatefulWidget {
 }
 
 class _ChecklistPageState extends State<ChecklistPage> {
-  List<dynamic> _categories = [];
-  List<dynamic> _items = [];
-  int? _selectedCategoryId;
-  final _categoryNameController = TextEditingController();
-  final _itemNameController = TextEditingController();
-  Map<int, bool> _categoryVisibility = {};
-
-  Future<void> _loadCategories() async {
-    var url = Uri.parse('http://10.0.2.2:5000/categories/${widget.userId}');
-    try {
-      var response = await http.get(url);
-      if (response.statusCode == 200) {
-        setState(() {
-          _categories = jsonDecode(response.body);
-        });
-      } else {
-        throw Exception('Failed to load categories');
-      }
-    } catch (e) {
-      throw Exception('Error loading categories: $e');
-    }
-  }
-
-  Future<void> _loadItems(int categoryId) async {
-    var url = Uri.parse('http://10.0.2.2:5000/items/${widget.userId}/$categoryId');
-    try {
-      var response = await http.get(url);
-      if (response.statusCode == 200) {
-        setState(() {
-          _items = jsonDecode(response.body);
-          // Ensure each item has an 'isSelected' field based on 'is_done'
-          _items = _items.map((item) => {
-            ...item,
-            'isSelected': item['is_done'] == true || item['is_done'] == 1, // Handle both boolean and integer
-          }).toList();
-        });
-      } else {
-        throw Exception('Failed to load items');
-      }
-    } catch (e) {
-      throw Exception('Error loading items: $e');
-    }
-  }
-
-  Future<void> _addCategory(String categoryName) async {
-    var url = Uri.parse('http://10.0.2.2:5000/categories');
-    try {
-      var response = await http.post(url, headers: {
-        'Content-Type': 'application/json',
-      }, body: jsonEncode({
-        'user_id': widget.userId,
-        'category_name': categoryName,
-      }));
-
-      if (response.statusCode == 201) {
-        _loadCategories();
-      } else {
-        throw Exception('Failed to add category');
-      }
-    } catch (e) {
-      throw Exception('Error adding category: $e');
-    }
-  }
-
-  Future<void> _addItem(int categoryId, String itemName) async {
-    var url = Uri.parse('http://10.0.2.2:5000/items');
-    try {
-      var response = await http.post(url, headers: {
-        'Content-Type': 'application/json',
-      }, body: jsonEncode({
-        'user_id': widget.userId,
-        'category_id': categoryId,
-        'item_name': itemName,
-      }));
-
-      if (response.statusCode == 201) {
-        _loadItems(categoryId);
-      } else {
-        throw Exception('Failed to add item');
-      }
-    } catch (e) {
-      throw Exception('Error adding item: $e');
-    }
-  }
-
-  Future<void> _deleteCategory(int categoryId) async {
-    var url = Uri.parse('http://10.0.2.2:5000/categories/$categoryId');
-    try {
-      var response = await http.delete(url);
-      if (response.statusCode == 200) {
-        _loadCategories();
-      } else {
-        throw Exception('Failed to delete category');
-      }
-    } catch (e) {
-      throw Exception('Error deleting category: $e');
-    }
-  }
-
-  Future<void> _deleteItem(int itemId) async {
-    var url = Uri.parse('http://10.0.2.2:5000/items/$itemId');
-    try {
-      var response = await http.delete(url);
-      if (response.statusCode == 200) {
-        _loadItems(_selectedCategoryId!);
-      } else {
-        throw Exception('Failed to delete item');
-      }
-    } catch (e) {
-      throw Exception('Error deleting item: $e');
-    }
-  }
-
-  Future<void> _updateItem(int itemId, bool isDone) async {
-    var url = Uri.parse('http://10.0.2.2:5000/items/$itemId');
-    try {
-      var response = await http.patch(url, headers: {
-        'Content-Type': 'application/json',
-      }, body: jsonEncode({
-        'is_done': isDone,
-      }));
-      if (response.statusCode == 200) {
-        // Update the local state
-        setState(() {
-          var item = _items.firstWhere((item) => item['id'] == itemId);
-          item['isSelected'] = isDone;
-          item['is_done'] = isDone;
-        });
-      } else {
-        throw Exception('Failed to update item');
-      }
-    } catch (e) {
-      throw Exception('Error updating item: $e');
-    }
-  }
-
-  void _showAddItemDialog(BuildContext context, int categoryId) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Add Item'),
-          content: TextField(
-            controller: _itemNameController,
-            decoration: InputDecoration(
-              labelText: 'Item Name',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          actions: <Widget>[
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                _addItem(categoryId, _itemNameController.text);
-                Navigator.of(context).pop();
-                _itemNameController.clear();
-              },
-              child: Text('Add'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showAddCategoryDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Add Category'),
-          content: TextField(
-            controller: _categoryNameController,
-            decoration: InputDecoration(
-              labelText: 'Category Name',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          actions: <Widget>[
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                _addCategory(_categoryNameController.text);
-                Navigator.of(context).pop();
-                _categoryNameController.clear();
-              },
-              child: Text('Add'),
-            ),
-          ],
-        );
-      },
-    );
-  }
+  List<Category> categories = [];
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadCategories();
+    fetchCategories();
   }
-  void _toggleCategoryVisibility(int categoryId) {
-    setState(() {
-      if (_selectedCategoryId == categoryId) {
-        _selectedCategoryId = null;
-        _items = [];
-      } else {
-        _selectedCategoryId = categoryId;
-        _loadItems(categoryId);
-      }
-    });
+
+  Future<void> fetchCategories() async {
+    final response = await http.get(Uri.parse('http://10.0.2.2:5000/categories?user_id=${widget.userId}'));
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      setState(() {
+        categories = data.map((item) => Category.fromJson(item)).toList();
+        isLoading = false;
+      });
+    } else {
+      print('Failed to fetch categories');
+    }
+  }
+
+  Future<void> addCategory(String name) async {
+    final response = await http.post(
+      Uri.parse('http://10.0.2.2:5000/categories'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'user_id': widget.userId, 'name': name}),
+    );
+    if (response.statusCode == 201) {
+      fetchCategories();
+    } else {
+      print('Failed to add category');
+    }
+  }
+
+  Future<void> deleteCategory(int categoryId) async {
+    final response = await http.delete(Uri.parse('http://10.0.2.2:5000/categories/$categoryId'));
+    if (response.statusCode == 200) {
+      fetchCategories();
+    } else {
+      print('Failed to delete category');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Checklist Page')),
-      body: Column(
-        children: <Widget>[
-          Expanded(
-            child: ListView.builder(
-              itemCount: _categories.length,
-              itemBuilder: (context, index) {
-                final categoryId = _categories[index]['id'];
-                final isVisible = _selectedCategoryId == categoryId;
+      appBar: AppBar(
+        title: Text('Checklist'),
+      ),
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : categories.isEmpty
+          ? Center(child: Text('Empty'))
+          : ListView.builder(
+        itemCount: categories.length,
+        itemBuilder: (context, index) {
+          return CategoryTile(
+            category: categories[index],
+            onDelete: () => deleteCategory(categories[index].id),
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              String newCategoryName = '';
+              return AlertDialog(
+                title: Text('Add New Category'),
+                content: TextField(
+                  onChanged: (value) {
+                    newCategoryName = value;
+                  },
+                  decoration: InputDecoration(hintText: "Enter category name"),
+                ),
+                actions: <Widget>[
+                  TextButton(
+                    child: Text('Cancel'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                  TextButton(
+                    child: Text('Add'),
+                    onPressed: () {
+                      if (newCategoryName.isNotEmpty) {
+                        addCategory(newCategoryName);
+                        Navigator.of(context).pop();
+                      }
+                    },
+                  ),
+                ],
+              );
+            },
+          );
+        },
+        child: Icon(Icons.add),
+      ),
+    );
+  }
+}
 
-                return Card(
-                  child: Column(
-                    children: <Widget>[
-                      ListTile(
-                        title: Text(_categories[index]['category_name']),
-                        trailing: IconButton(
-                          icon: Icon(Icons.delete),
-                          onPressed: () {
-                            _deleteCategory(categoryId);
-                          },
-                        ),
-                      ),
-                      Row(
-                        children: <Widget>[
-                          IconButton(
-                            icon: Icon(Icons.add),
-                            onPressed: () {
-                              _showAddItemDialog(context, categoryId);
-                            },
-                          ),
-                          IconButton(
-                            icon: Icon(isVisible ? Icons.visibility_off : Icons.remove_red_eye),
-                            onPressed: () {
-                              _toggleCategoryVisibility(categoryId);
-                            },
-                          ),
-                        ],
-                      ),
-                      if (isVisible)
-                        ListView.builder(
-                          shrinkWrap: true,
-                          physics: NeverScrollableScrollPhysics(),
-                          itemCount: _items.length,
-                          itemBuilder: (context, itemIndex) {
-                            return ListTile(
-                              title: Row(
-                                children: <Widget>[
-                                  Checkbox(
-                                    value: _items[itemIndex]['isSelected'] == true || _items[itemIndex]['isSelected'] == 1,
-                                    onChanged: (bool? value) {
-                                      _updateItem(_items[itemIndex]['id'], value ?? false);
-                                    },
-                                  ),
-                                  Text(_items[itemIndex]['item_name']),
-                                ],
-                              ),
-                              trailing: IconButton(
-                                icon: Icon(Icons.delete),
-                                onPressed: () {
-                                  _deleteItem(_items[itemIndex]['id']);
+class Category {
+  final int id;
+  final String name;
+  List<ChecklistItem> items = [];
+  bool isExpanded = false;
+
+  Category({required this.id, required this.name});
+
+  factory Category.fromJson(Map<String, dynamic> json) {
+    return Category(
+      id: json['id'],
+      name: json['name'],
+    );
+  }
+}
+
+class ChecklistItem {
+  final int id;
+  final String name;
+  bool isChecked;
+
+  ChecklistItem({required this.id, required this.name, this.isChecked = false});
+
+  factory ChecklistItem.fromJson(Map<String, dynamic> json) {
+    return ChecklistItem(
+      id: json['id'],
+      name: json['name'],
+      isChecked: json['is_checked'] == 1,
+    );
+  }
+}
+
+class CategoryTile extends StatefulWidget {
+  final Category category;
+  final VoidCallback onDelete;
+
+  CategoryTile({required this.category, required this.onDelete});
+
+  @override
+  _CategoryTileState createState() => _CategoryTileState();
+}
+
+class _CategoryTileState extends State<CategoryTile> {
+  bool _isExpanded = false;
+
+  void toggleExpansion() {
+    setState(() {
+      _isExpanded = !_isExpanded;
+    });
+    if (_isExpanded && widget.category.items.isEmpty) {
+      fetchItems();
+    }
+  }
+
+  Future<void> fetchItems() async {
+    final response = await http.get(Uri.parse('http://10.0.2.2:5000/checklist_items/${widget.category.id}'));
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      setState(() {
+        widget.category.items = data.map((item) => ChecklistItem.fromJson(item)).toList();
+      });
+    } else {
+      print('Failed to fetch items');
+    }
+  }
+
+  Future<void> addItem(String name) async {
+    final response = await http.post(
+      Uri.parse('http://10.0.2.2:5000/checklist_items'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'category_id': widget.category.id, 'name': name}),
+    );
+    print('Request: ${response.request}');
+    print('Response: ${response.statusCode} - ${response.body}');
+    if (response.statusCode == 201) {
+      fetchItems();
+    } else {
+      print('Failed to add item. Status code: ${response.statusCode}');
+      print('Response body: ${response.body}');
+    }
+  }
+
+  Future<void> deleteItem(int itemId) async {
+    final response = await http.delete(Uri.parse('http://10.0.2.2:5000/checklist_items/$itemId'));
+    if (response.statusCode == 200) {
+      fetchItems();
+    } else {
+      print('Failed to delete item');
+    }
+  }
+
+  Future<void> updateItem(int itemId, bool isChecked) async {
+    final response = await http.put(
+      Uri.parse('http://10.0.2.2:5000/checklist_items/$itemId'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'is_checked': isChecked ? 1 : 0}), // Update the is_checked value
+    );
+    if (response.statusCode != 200) {
+      print('Failed to update item');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: <Widget>[
+        Card(
+          margin: EdgeInsets.all(8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ListTile(
+                title: Text(widget.category.name),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: _isExpanded ? Icon(Icons.visibility) : Icon(Icons.visibility_off),
+                      onPressed: toggleExpansion,
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.add),
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            String newItemName = '';
+                            return AlertDialog(
+                              title: Text('Add New Item'),
+                              content: TextField(
+                                onChanged: (value) {
+                                  newItemName = value;
                                 },
+                                decoration: InputDecoration(hintText: "Enter item name"),
                               ),
+                              actions: <Widget>[
+                                TextButton(
+                                  child: Text('Cancel'),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                                TextButton(
+                                  child: Text('Add'),
+                                  onPressed: () {
+                                    if (newItemName.isNotEmpty) {
+                                      addItem(newItemName);
+                                      Navigator.of(context).pop();
+                                    }
+                                  },
+                                ),
+                              ],
                             );
                           },
-                        ),
-                    ],
-                  ),
-                );
-              },
-            ),
+                        );
+                      },
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.delete),
+                      onPressed: widget.onDelete,
+                    ),
+                  ],
+                ),
+              ),
+              if (_isExpanded)
+                Divider(
+                  thickness: 1,
+                  color: Colors.grey[300],
+                ),
+              if (_isExpanded)
+                Column(
+                  children: widget.category.items.isEmpty
+                      ? [
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text('Empty'),
+                    )
+                  ]
+                      : widget.category.items.map((item) {
+                    return ListTile(
+                      title: Text(item.name),
+                      leading: Checkbox(
+                        value: item.isChecked,
+                        onChanged: (bool? value) {
+                          setState(() {
+                            item.isChecked = value!;
+                            updateItem(item.id, item.isChecked);
+                          });
+                        },
+                      ),
+                      trailing: IconButton(
+                        icon: Icon(Icons.delete),
+                        onPressed: () => deleteItem(item.id),
+                      ),
+                    );
+                  }).toList(),
+                ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () {
-              _showAddCategoryDialog(context);
-            },
-            child: Text('Add Category'),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

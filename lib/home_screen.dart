@@ -3,10 +3,9 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'calendar_page.dart';
 import 'notifications_page.dart';
-import 'account_page.dart'; // Add this import
+import 'account_page.dart';
 import 'insights_page.dart';
 import 'others_page.dart';
-
 
 class HomeScreen extends StatefulWidget {
   final String userId;
@@ -53,7 +52,6 @@ class _HomeScreenState extends State<HomeScreen> {
       _selectedIndex = index;
     });
 
-    // Add your navigation logic here
     switch (index) {
       case 0:
         Navigator.push(
@@ -70,7 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
       case 2:
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => OthersPage()),
+          MaterialPageRoute(builder: (context) => OthersPage(userId: int.parse(widget.userId))),
         );
         break;
     }

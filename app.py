@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify
 import mysql.connector
 from mysql.connector import Error
+import os
+import json
 
 app = Flask(__name__)
 
@@ -278,41 +280,37 @@ def get_emergency_contacts():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/getUserId', methods=['GET'])
-def get_user_id():
-    try:
-        cursor = db.cursor(dictionary=True)
-        query = "SELECT id FROM users WHERE username = %s"
-        cursor.execute(query, ('preethi',))  # Replace with actual username
-        user_id = cursor.fetchone()['id']
-        return jsonify({"user_id": str(user_id)}), 200  # Convert int to str
-    except Error as e:
-        return handle_db_error(f"Database error: {str(e)}")
-
-@app.route('/categories/<int:user_id>', methods=['GET'])
-def get_categories(user_id):
-    try:
-        cursor = db.cursor(dictionary=True)
-        query = "SELECT * FROM categories WHERE user_id = %s"
-        cursor.execute(query, (user_id,))
-        categories = cursor.fetchall()
-        return jsonify(categories), 200
-    except Error as e:
-        return handle_db_error(f"Database error: {str(e)}")
-
 
 @app.route('/categories', methods=['POST'])
 def add_category():
+    data = request.json
     try:
-        data = request.json
         cursor = db.cursor()
-        query = "INSERT INTO categories (user_id, category_name) VALUES (%s, %s)"
-        cursor.execute(query, (data['user_id'], data['category_name']))
+        query = "INSERT INTO categories (name, user_id) VALUES (%s, %s)"
+        values = (data['name'], data['user_id'])
+        cursor.execute(query, values)
         db.commit()
         return jsonify({"message": "Category added successfully!"}), 201
     except Error as e:
         db.rollback()
         return handle_db_error(f"Database error: {str(e)}")
+    finally:
+        cursor.close()
+
+@app.route('/categories', methods=['GET'])
+def get_categories():
+    user_id = request.args.get('user_id')
+    try:
+        cursor = db.cursor(dictionary=True)
+        query = "SELECT id, name FROM categories WHERE user_id = %s"
+        cursor.execute(query, (user_id,))
+        categories = cursor.fetchall()
+        return jsonify(categories), 200
+    except Error as e:
+        return handle_db_error(f"Database error: {str(e)}")
+    finally:
+        cursor.close()
+
 
 @app.route('/categories/<int:category_id>', methods=['DELETE'])
 def delete_category(category_id):
@@ -325,13 +323,33 @@ def delete_category(category_id):
     except Error as e:
         db.rollback()
         return handle_db_error(f"Database error: {str(e)}")
+    finally:
+        cursor.close()
 
-@app.route('/items/<int:user_id>/<int:category_id>', methods=['GET'])
-def get_items(user_id, category_id):
+@app.route('/checklist_items', methods=['POST'])
+def add_item():
+    data = request.json
+    try:
+        cursor = db.cursor()
+        query = "INSERT INTO checklist_items (name, category_id) VALUES (%s, %s)"
+        values = (data['name'], data['category_id'])
+        cursor.execute(query, values)
+        db.commit()
+        return jsonify({"message": "Item added successfully!"}), 201
+    except Error as e:
+        db.rollback()
+        print(f"Error: {str(e)}")
+        return handle_db_error(f"Database error: {str(e)}")
+    finally:
+        cursor.close()
+
+
+@app.route('/checklist_items/<int:category_id>', methods=['GET'])
+def get_items(category_id):
     try:
         cursor = db.cursor(dictionary=True)
-        query = "SELECT id, item_name, is_done FROM items WHERE user_id = %s AND category_id = %s"
-        cursor.execute(query, (user_id, category_id))
+        query = "SELECT id, name, is_checked FROM checklist_items WHERE category_id = %s"
+        cursor.execute(query, (category_id,))
         items = cursor.fetchall()
         return jsonify(items), 200
     except Error as e:
@@ -339,59 +357,41 @@ def get_items(user_id, category_id):
     finally:
         cursor.close()
 
-@app.route('/items', methods=['POST'])
-def add_item():
+
+@app.route('/checklist_items/<int:item_id>', methods=['PUT'])
+def update_item(item_id):
+    data = request.json
     try:
-        data = request.json
         cursor = db.cursor()
-        query = "INSERT INTO items (user_id, category_id, item_name) VALUES (%s, %s, %s)"
-        cursor.execute(query, (data['user_id'], data['category_id'], data['item_name']))
+        query = "UPDATE checklist_items SET is_checked = %s WHERE id = %s"
+        values = (data['is_checked'], item_id)
+        cursor.execute(query, values)
         db.commit()
-        return jsonify({"message": "Item added successfully!"}), 201
+        return jsonify({"message": "Item updated successfully!"}), 200
     except Error as e:
         db.rollback()
         return handle_db_error(f"Database error: {str(e)}")
+    finally:
+        cursor.close()
 
-@app.route('/items/<int:item_id>', methods=['DELETE'])
+
+@app.route('/checklist_items/<int:item_id>', methods=['DELETE'])
 def delete_item(item_id):
     try:
         cursor = db.cursor()
-        query = "DELETE FROM items WHERE id = %s"
+        query = "DELETE FROM checklist_items WHERE id = %s"
         cursor.execute(query, (item_id,))
         db.commit()
         return jsonify({"message": "Item deleted successfully!"}), 200
     except Error as e:
         db.rollback()
         return handle_db_error(f"Database error: {str(e)}")
+    finally:
+        cursor.close()
 
-@app.route('/items/<int:item_id>', methods=['PATCH'])
-def update_item(item_id):
-    try:
-        data = request.json
-        cursor = db.cursor()
-        query = "UPDATE items SET is_done = %s WHERE id = %s"
-        cursor.execute(query, (data['is_done'], item_id))
-        db.commit()
-        return jsonify({"message": "Item updated successfully!"}), 200
-    except Error as e:
-        db.rollback()
-        return jsonify({"error": f"Database error: {str(e)}"}), 500
-    finally:
-        cursor.close()
-@app.route('/delete_account', methods=['DELETE'])
-def delete_account():
-    data = request.json
-    try:
-        cursor = db.cursor()
-        # Delete user from the users table
-        delete_user_query = "DELETE FROM users WHERE id = %s"
-        cursor.execute(delete_user_query, (data['user_id'],))
-        db.commit()
-        return jsonify({"message": "Account deleted successfully!"}), 200
-    except Error as e:
-        db.rollback()
-        return jsonify({"error": f"Database error: {str(e)}"}), 500
-    finally:
-        cursor.close()
+
 if __name__ == '__main__':
     app.run(debug=True)
+
+
+
