@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'login_screen.dart'; // Import your login screen file
 
 class AccountPage extends StatefulWidget {
   final String userId;
@@ -142,6 +143,15 @@ class _AccountPageState extends State<AccountPage> {
     }
   }
 
+  void _logout() {
+    // Implement your logout logic here, e.g., clear user session, navigate to login screen
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => LoginScreen()),
+          (route) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -199,6 +209,13 @@ class _AccountPageState extends State<AccountPage> {
               _buildInfoRow('Months', _userInfo?['months']?.toString()),
               _buildInfoRow('Children', _userInfo?['children']?.toString()),
             ],
+            SizedBox(height: 20),
+            Center(
+              child: TextButton(
+                onPressed: _logout,
+                child: Text('Logout'),
+              ),
+            ),
           ],
         ),
       ),
