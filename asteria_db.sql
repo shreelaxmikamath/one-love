@@ -135,53 +135,43 @@ CREATE TABLE `notes` (
   CONSTRAINT `fk_notes_users` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `checklists` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `user_id` int(11) NOT NULL,
-  `name` varchar(100) NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+CREATE TABLE categories (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  category_name VARCHAR(100) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
 
--- Table structure for table `checklist_items`
-CREATE TABLE `checklist_items` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `checklist_id` int(11) NOT NULL,
-  `name` varchar(100) NOT NULL,
-  `is_checked` tinyint(1) NOT NULL DEFAULT 0,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  FOREIGN KEY (`checklist_id`) REFERENCES `checklists` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+CREATE TABLE items (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  category_id INT NOT NULL,
+  item_name VARCHAR(100) NOT NULL,
+  checked BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  FOREIGN KEY (category_id) REFERENCES categories(id)
+);
 
+CREATE TABLE categories (
+    id INT AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    category_name VARCHAR(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (user_id) REFERENCES users (id)
+);
 
--- Insert dummy checklists for user with ID 1
-INSERT INTO `checklists` (`user_id`, `name`) VALUES
-(1, 'Daily Tasks'),
-(1, 'Grocery Shopping'),
-(1, 'Work Projects');
-
--- Insert dummy checklists for user with ID 2
-INSERT INTO `checklists` (`user_id`, `name`) VALUES
-(2, 'Weekly Goals'),
-(2, 'Fitness Routine');
-
--- Insert checklist items for checklist with ID 1
-INSERT INTO `checklist_items` (`checklist_id`, `name`, `is_checked`) VALUES
-(1, 'Walk the dog', 0),
-(1, 'Prepare breakfast', 1),
-(1, 'Attend meeting at 10 AM', 0);
-
--- Insert checklist items for checklist with ID 2
-INSERT INTO `checklist_items` (`checklist_id`, `name`, `is_checked`) VALUES
-(2, 'Buy milk', 0),
-(2, 'Pick up dry cleaning', 0);
-
--- Insert checklist items for checklist with ID 3
-INSERT INTO `checklist_items` (`checklist_id`, `name`, `is_checked`) VALUES
-(3, 'Review project proposal', 0),
-(3, 'Update spreadsheet', 1);
+CREATE TABLE items (
+    id INT AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    category_id INT NOT NULL,
+    item_name VARCHAR(255) NOT NULL,
+    is_done BOOLEAN DEFAULT FALSE,
+    PRIMARY KEY (id),
+    FOREIGN KEY (user_id) REFERENCES users (id),
+    FOREIGN KEY (category_id) REFERENCES categories (id)
+);
 
 
 CREATE TABLE emergency_contacts (
@@ -192,3 +182,9 @@ CREATE TABLE emergency_contacts (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
+
+
+
+
+
+

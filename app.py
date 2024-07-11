@@ -278,87 +278,100 @@ def get_emergency_contacts():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# To-do list
-@app.route('/add_category', methods=['POST'])
-def add_category():
-    data = request.json
+@app.route('/getUserId', methods=['GET'])
+def get_user_id():
     try:
+        cursor = db.cursor(dictionary=True)
+        query = "SELECT id FROM users WHERE username = %s"
+        cursor.execute(query, ('preethi',))  # Replace with actual username
+        user_id = cursor.fetchone()['id']
+        return jsonify({"user_id": str(user_id)}), 200  # Convert int to str
+    except Error as e:
+        return handle_db_error(f"Database error: {str(e)}")
+
+@app.route('/categories/<int:user_id>', methods=['GET'])
+def get_categories(user_id):
+    try:
+        cursor = db.cursor(dictionary=True)
+        query = "SELECT * FROM categories WHERE user_id = %s"
+        cursor.execute(query, (user_id,))
+        categories = cursor.fetchall()
+        return jsonify(categories), 200
+    except Error as e:
+        return handle_db_error(f"Database error: {str(e)}")
+
+
+@app.route('/categories', methods=['POST'])
+def add_category():
+    try:
+        data = request.json
         cursor = db.cursor()
-        query = "INSERT INTO checklists (user_id, name) VALUES (%s, %s)"
-        cursor.execute(query, (data['user_id'], data['name']))
+        query = "INSERT INTO categories (user_id, category_name) VALUES (%s, %s)"
+        cursor.execute(query, (data['user_id'], data['category_name']))
         db.commit()
         return jsonify({"message": "Category added successfully!"}), 201
     except Error as e:
         db.rollback()
         return handle_db_error(f"Database error: {str(e)}")
-    finally:
-        cursor.close()
 
-@app.route('/delete_category', methods=['DELETE'])
-def delete_category():
-    data = request.json
+@app.route('/categories/<int:category_id>', methods=['DELETE'])
+def delete_category(category_id):
     try:
         cursor = db.cursor()
-        # Delete category
-        delete_category_query = "DELETE FROM checklists WHERE id = %s"
-        cursor.execute(delete_category_query, (data['category_id'],))
-
-        # Also delete associated items
-        delete_items_query = "DELETE FROM checklist_items WHERE checklist_id = %s"
-        cursor.execute(delete_items_query, (data['category_id'],))
-
+        query = "DELETE FROM categories WHERE id = %s"
+        cursor.execute(query, (category_id,))
         db.commit()
         return jsonify({"message": "Category deleted successfully!"}), 200
     except Error as e:
         db.rollback()
         return handle_db_error(f"Database error: {str(e)}")
-    finally:
-        cursor.close()
 
-@app.route('/add_item', methods=['POST'])
-def add_item():
-    data = request.json
+@app.route('/items/<int:user_id>/<int:category_id>', methods=['GET'])
+def get_items(user_id, category_id):
     try:
+        cursor = db.cursor(dictionary=True)
+        query = "SELECT * FROM items WHERE user_id = %s AND category_id = %s"
+        cursor.execute(query, (user_id, category_id))
+        items = cursor.fetchall()
+        return jsonify(items), 200
+    except Error as e:
+        return handle_db_error(f"Database error: {str(e)}")
+
+@app.route('/items', methods=['POST'])
+def add_item():
+    try:
+        data = request.json
         cursor = db.cursor()
-        query = "INSERT INTO checklist_items (checklist_id, name) VALUES (%s, %s)"
-        cursor.execute(query, (data['checklist_id'], data['name']))
+        query = "INSERT INTO items (user_id, category_id, item_name) VALUES (%s, %s, %s)"
+        cursor.execute(query, (data['user_id'], data['category_id'], data['item_name']))
         db.commit()
         return jsonify({"message": "Item added successfully!"}), 201
     except Error as e:
         db.rollback()
         return handle_db_error(f"Database error: {str(e)}")
-    finally:
-        cursor.close()
 
-@app.route('/delete_item', methods=['DELETE'])
-def delete_item():
-    data = request.json
+@app.route('/items/<int:item_id>', methods=['DELETE'])
+def delete_item(item_id):
     try:
         cursor = db.cursor()
-        query = "DELETE FROM checklist_items WHERE id = %s"
-        cursor.execute(query, (data['item_id'],))
+        query = "DELETE FROM items WHERE id = %s"
+        cursor.execute(query, (item_id,))
         db.commit()
         return jsonify({"message": "Item deleted successfully!"}), 200
     except Error as e:
         db.rollback()
         return handle_db_error(f"Database error: {str(e)}")
-    finally:
-        cursor.close()
 
-@app.route('/toggle_item', methods=['PUT'])
-def toggle_item():
-    data = request.json
+@app.route('/items/<int:item_id>', methods=['PATCH'])
+def update_item(item_id):
     try:
         cursor = db.cursor()
-        query = "UPDATE checklist_items SET is_checked = NOT is_checked WHERE id = %s"
-        cursor.execute(query, (data['item_id'],))
+        query = "UPDATE items SET is_done = %s WHERE id = %s"
+        cursor.execute(query, (request.json['is_done'], item_id))
         db.commit()
-        return jsonify({"message": "Item toggled successfully!"}), 200
+        return jsonify({"message": "Item updated successfully!"}), 200
     except Error as e:
         db.rollback()
-        return handle_db_error(f"Database error: {str(e)}")
-    finally:
-        cursor.close()
-
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
 if __name__ == '__main__':
     app.run(debug=True)
