@@ -483,7 +483,6 @@ def get_appointments():
 @app.route('/get_prescriptions', methods=['GET'])
 def get_prescriptions():
     user_id = request.args.get('user_id')
-    cursor = None
 
     try:
         cursor = db.cursor(dictionary=True)
@@ -494,28 +493,11 @@ def get_prescriptions():
         """
         cursor.execute(query, (user_id,))
         prescriptions = cursor.fetchall()
-
-        # Assuming prescriptions is a list of dictionaries, convert to required JSON format
-        prescriptions_list = []
-        for prescription in prescriptions:
-            prescription_data = {
-                'medicine_name': prescription['medications'],  # Example field mapping
-                'prescription_date': prescription['prescription_date'],
-                'doctor_name': prescription['doctor_name'],
-                'diagnosis': prescription['diagnosis'],
-                'instructions': prescription['instructions']
-                # Add more fields as needed
-            }
-            prescriptions_list.append(prescription_data)
-
-        return jsonify(prescriptions_list), 200
+        cursor.close()
+        return jsonify(prescriptions), 200
 
     except Error as e:
         return jsonify({"error": f"Database error: {str(e)}"}), 500
-
-    finally:
-        if cursor:
-            cursor.close()
 if __name__ == '__main__':
     app.run(debug=True)
 

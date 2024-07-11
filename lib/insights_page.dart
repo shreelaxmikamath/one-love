@@ -51,7 +51,7 @@ class InsightsPage extends StatelessWidget {
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => PrescriptionsPage()),
+                          MaterialPageRoute(builder: (context) => PrescriptionsPage(userId: userId)),
                         );
                       },
                     ),
