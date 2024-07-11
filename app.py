@@ -404,6 +404,118 @@ def delete_account():
         return jsonify({"error": f"Database error: {str(e)}"}), 500
     finally:
         cursor.close()
+
+#doctorsappointment
+@app.route('/doctors', methods=['GET'])
+def get_doctors():
+    try:
+        cursor = db.cursor(dictionary=True)
+        query = "SELECT id, name FROM doctors"
+        cursor.execute(query)
+        doctors = cursor.fetchall()
+        cursor.close()
+        return jsonify(doctors), 200
+    except Error as e:
+        return handle_db_error(f"Database error: {str(e)}")
+
+
+# Flask endpoint to book an appointment
+@app.route('/book_appointment', methods=['POST'])
+def book_appointment():
+    data = request.json
+
+    try:
+        cursor = db.cursor()
+
+        # Fetch doctor_id based on doctor_name
+        doctor_query = """
+        SELECT id FROM doctors WHERE name = %s
+        """
+        cursor.execute(doctor_query, (data['doctor_name'],))
+        doctor_id = cursor.fetchone()[0]
+
+        # Insert booked appointment into database
+        appointment_insert_query = """
+        INSERT INTO booked_appointments (user_id, doctor_id, appointment_date, appointment_time, reason)
+        VALUES (%s, %s, %s, %s, %s)
+        """
+        appointment_insert_values = (
+            data['user_id'], doctor_id, data['appointment_date'],
+            data['appointment_time'], data['reason']
+        )
+        cursor.execute(appointment_insert_query, appointment_insert_values)
+        db.commit()
+
+        return jsonify({"message": "Appointment booked successfully!"}), 201
+
+    except KeyError as e:
+        return jsonify({"error": f"Missing required field: {str(e)}"}), 400
+
+    except pymysql.Error as e:
+        db.rollback()
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
+
+    finally:
+        if 'cursor' in locals() and cursor is not None:
+            cursor.close()
+
+@app.route('/appointments', methods=['GET'])
+def get_appointments():
+    user_id = request.args.get('user_id')
+    try:
+        cursor = db.cursor(dictionary=True)
+        query = """
+        SELECT ba.id, d.name as doctor_name, ba.appointment_date, ba.appointment_time, ba.reason
+        FROM booked_appointments ba
+        INNER JOIN doctors d ON ba.doctor_id = d.id
+        WHERE ba.user_id = %s
+        """
+        cursor.execute(query, (user_id,))
+        appointments = cursor.fetchall()
+        cursor.close()
+
+        return jsonify(appointments), 200
+
+    except Error as e:
+        return handle_db_error(f"Database error: {str(e)}")
+
+
+@app.route('/get_prescriptions', methods=['GET'])
+def get_prescriptions():
+    user_id = request.args.get('user_id')
+    cursor = None
+
+    try:
+        cursor = db.cursor(dictionary=True)
+        query = """
+        SELECT id, prescription_date, doctor_name, diagnosis, medications, instructions
+        FROM prescriptions
+        WHERE user_id = %s
+        """
+        cursor.execute(query, (user_id,))
+        prescriptions = cursor.fetchall()
+
+        # Assuming prescriptions is a list of dictionaries, convert to required JSON format
+        prescriptions_list = []
+        for prescription in prescriptions:
+            prescription_data = {
+                'medicine_name': prescription['medications'],  # Example field mapping
+                'prescription_date': prescription['prescription_date'],
+                'doctor_name': prescription['doctor_name'],
+                'diagnosis': prescription['diagnosis'],
+                'instructions': prescription['instructions']
+                # Add more fields as needed
+            }
+            prescriptions_list.append(prescription_data)
+
+        return jsonify(prescriptions_list), 200
+
+    except Error as e:
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
 if __name__ == '__main__':
     app.run(debug=True)
 

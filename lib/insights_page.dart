@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'appointments_page.dart';
 import 'prescriptions_page.dart';
-import 'bookings_page.dart'; // Import the bookings page
 
 class InsightsPage extends StatelessWidget {
+  final String userId;
+
+  InsightsPage({required this.userId});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -15,34 +18,66 @@ class InsightsPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => AppointmentsPage()),
-                );
-              },
-              child: Text('Book Appointment'),
+            Row(
+              children: [
+                Expanded(
+                  child: Card(
+                    elevation: 4,
+                    child: ListTile(
+                      contentPadding: EdgeInsets.all(16.0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                      title: Text('Book Appointment'),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => AppointmentsPage(userId: userId)),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: Card(
+                    elevation: 4,
+                    child: ListTile(
+                      contentPadding: EdgeInsets.all(16.0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                      title: Text('View Prescriptions'),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => PrescriptionsPage()),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ],
             ),
             SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => BookingsPage()),
-                );
-              },
-              child: Text('View Bookings'), // Moved before View Prescriptions
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => PrescriptionsPage()),
-                );
-              },
-              child: Text('View Prescriptions'),
+            Row(
+              children: [
+                Expanded(
+                  child: Card(
+                    elevation: 4,
+                    child: ListTile(
+                      contentPadding: EdgeInsets.all(16.0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                      title: Text('Another Box'),
+                      onTap: () {
+                        // Replace with navigation logic for another page
+                      },
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

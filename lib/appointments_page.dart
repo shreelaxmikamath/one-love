@@ -1,127 +1,205 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class AppointmentsPage extends StatefulWidget {
+  final String userId;
+
+  AppointmentsPage({required this.userId});
+
   @override
   _AppointmentsPageState createState() => _AppointmentsPageState();
 }
 
 class _AppointmentsPageState extends State<AppointmentsPage> {
-  List<String> _doctors = ['Dr. Smith', 'Dr. Jones', 'Dr. Williams'];
-  DateTime? _selectedDate;
-  TimeOfDay? _selectedTime;
+  List<String> _doctors = [];
   String? _selectedDoctor;
-  String? _symptoms;
+  DateTime _selectedDate = DateTime.now();
+  TimeOfDay _selectedTime = TimeOfDay.now();
+  TextEditingController _reasonController = TextEditingController();
 
-  Map<DateTime, Map<String, dynamic>> _appointments = {}; // Store appointments with additional data
+  @override
+  void initState() {
+    super.initState();
+    _fetchDoctors();
+  }
+
+  Future<void> _fetchDoctors() async {
+    try {
+      final response =
+      await http.get(Uri.parse('http://10.0.2.2:5000/doctors'));
+
+      if (response.statusCode == 200) {
+        List<dynamic> doctorsData = json.decode(response.body);
+
+        setState(() {
+          _doctors = doctorsData
+              .map<String>((doctor) => doctor['name'].toString())
+              .toList();
+        });
+      } else {
+        throw Exception('Failed to fetch data');
+      }
+    } catch (e) {
+      print('Error fetching doctors: $e');
+      // Handle error, show error message, etc.
+    }
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
+  }
+
+  Future<void> _selectTime(BuildContext context) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: _selectedTime,
+    );
+    if (picked != null && picked != _selectedTime) {
+      setState(() {
+        _selectedTime = picked;
+      });
+    }
+  }
+
+  Future<void> _bookAppointment() async {
+    // Implement booking logic here
+    if (_selectedDoctor == null) {
+      // Handle case where no doctor is selected
+      return;
+    }
+
+    String reason = _reasonController.text.trim();
+    DateTime selectedDateTime = DateTime(
+      _selectedDate.year,
+      _selectedDate.month,
+      _selectedDate.day,
+      _selectedTime.hour,
+      _selectedTime.minute,
+    );
+
+    // Prepare data to send to the API
+    Map<String, dynamic> appointmentData = {
+      'user_id': widget.userId, // Use userId passed from constructor
+      'doctor_name': _selectedDoctor,
+      'appointment_date': selectedDateTime.toIso8601String(),
+      'appointment_time': '${_selectedTime.hour}:${_selectedTime.minute}', // Include appointment time
+      'reason': reason,
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:5000/book_appointment'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(appointmentData),
+      );
+
+      if (response.statusCode == 200) {
+        // Appointment booked successfully, handle success scenario
+        print('Appointment booked successfully!');
+        // Add navigation or display success message
+      } else {
+        // Appointment booking failed, handle error scenario
+        print('Failed to book appointment: ${response.body}');
+        // Display error message
+      }
+    } catch (e) {
+      print('Error booking appointment: $e');
+      // Handle error, show error message, etc.
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Book Appointment'),
+        title: Text('Appointments'),
       ),
-      body: SingleChildScrollView(
+      body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            DropdownButtonFormField<String>(
-              decoration: InputDecoration(labelText: 'Select Doctor'),
-              items: _doctors.map((doctor) {
-                return DropdownMenuItem<String>(
-                  value: doctor,
-                  child: Text(doctor),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedDoctor = value;
-                });
-              },
-            ),
-            SizedBox(height: 20),
-            TextButton(
-              onPressed: () async {
-                final DateTime? pickedDate = await showDatePicker(
-                  context: context,
-                  initialDate: _selectedDate ?? DateTime.now(),
-                  firstDate: DateTime.now(),
-                  lastDate: DateTime.now().add(Duration(days: 365)),
-                );
-
-                if (pickedDate != null && pickedDate != _selectedDate) {
+            Container(
+              color: Colors.white,
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: DropdownButton<String>(
+                isExpanded: true,
+                value: _selectedDoctor,
+                hint: Text('Select a doctor'),
+                onChanged: (newValue) {
                   setState(() {
-                    _selectedDate = pickedDate;
+                    _selectedDoctor = newValue;
                   });
-                }
-              },
-              child: Text(
-                _selectedDate == null ? 'Select Date' : 'Selected Date: ${_selectedDate!.toString().split(' ')[0]}',
-                style: TextStyle(fontSize: 16),
+                },
+                items: _doctors.map((doctor) {
+                  return DropdownMenuItem<String>(
+                    value: doctor,
+                    child: Text(doctor),
+                  );
+                }).toList(),
               ),
             ),
-            SizedBox(height: 20),
-            TextButton(
-              onPressed: () async {
-                final TimeOfDay? pickedTime = await showTimePicker(
-                  context: context,
-                  initialTime: _selectedTime ?? TimeOfDay.now(),
-                );
-
-                if (pickedTime != null && pickedTime != _selectedTime) {
-                  setState(() {
-                    _selectedTime = pickedTime;
-                  });
-                }
-              },
-              child: Text(
-                _selectedTime == null ? 'Select Time' : 'Selected Time: ${_selectedTime!.format(context)}',
-                style: TextStyle(fontSize: 16),
+            SizedBox(height: 16),
+            InkWell(
+              onTap: () => _selectDate(context),
+              child: InputDecorator(
+                decoration: InputDecoration(
+                  labelText: 'Select Date',
+                  border: OutlineInputBorder(),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                        '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}'),
+                    Icon(Icons.calendar_today),
+                  ],
+                ),
               ),
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 16),
+            InkWell(
+              onTap: () => _selectTime(context),
+              child: InputDecorator(
+                decoration: InputDecoration(
+                  labelText: 'Select Time',
+                  border: OutlineInputBorder(),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('${_selectedTime.format(context)}'),
+                    Icon(Icons.access_time),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(height: 16),
             TextField(
-              decoration: InputDecoration(labelText: 'Enter Symptoms'),
-              onChanged: (value) {
-                setState(() {
-                  _symptoms = value;
-                });
-              },
+              controller: _reasonController,
+              decoration: InputDecoration(
+                labelText: 'Reason for Appointment',
+                border: OutlineInputBorder(),
+              ),
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 16),
             ElevatedButton(
-              onPressed: _selectedDoctor == null || _selectedDate == null || _selectedTime == null
-                  ? null
-                  : () {
-                if (_symptoms == null) {
-                  _symptoms = ''; // Handle case where no symptoms are entered
-                }
-
-                DateTime combinedDateTime = DateTime(
-                  _selectedDate!.year,
-                  _selectedDate!.month,
-                  _selectedDate!.day,
-                  _selectedTime!.hour,
-                  _selectedTime!.minute,
-                );
-
-                setState(() {
-                  _appointments[combinedDateTime] = {
-                    'doctor': _selectedDoctor!,
-                    'symptoms': _symptoms!,
-                  };
-                });
-
-                Navigator.pop(context);
-              },
+              onPressed: _bookAppointment,
               child: Text('Book Appointment'),
             ),
-            SizedBox(height: 20),
-            if (_selectedDate != null && _selectedTime != null)
-              Text(
-                'Selected Date and Time: ${_selectedDate!.toString().split(' ')[0]} at ${_selectedTime!.format(context)}',
-                style: TextStyle(fontSize: 16),
-              ),
           ],
         ),
       ),

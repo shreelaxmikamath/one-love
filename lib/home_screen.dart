@@ -62,7 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
       case 1:
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => InsightsPage()),
+          MaterialPageRoute(builder: (context) => InsightsPage(userId: widget.userId)),
         );
         break;
       case 2:

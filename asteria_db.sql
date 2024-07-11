@@ -177,3 +177,49 @@ INSERT INTO checklist_items (category_id, name, is_checked) VALUES
 (9, 'Wipes', FALSE),
 (9, 'Formula', FALSE);
 
+CREATE TABLE doctors (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL
+);
+
+INSERT INTO doctors (name) VALUES ('Dr. Lily'), ('Dr. Jessica '), ('Dr. Williams');
+
+CREATE TABLE booked_appointments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    doctor_id INT NOT NULL,
+    appointment_date DATE NOT NULL,
+    appointment_time TIME NOT NULL,
+    reason TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),  -- Adjust based on your users table
+    FOREIGN KEY (doctor_id) REFERENCES doctors(id)  -- Adjust based on your doctors table
+);
+
+CREATE TABLE prescriptions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    prescription_date DATE NOT NULL,
+    doctor_name VARCHAR(255) NOT NULL,
+    diagnosis TEXT,
+    medications TEXT,
+    instructions TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- Inserting dummy prescriptions for user with ID 1
+INSERT INTO prescriptions (user_id, prescription_date, doctor_name, diagnosis, medications, instructions)
+VALUES (1, '2024-07-12', 'Dr. Smith', 'Headache', 'Tylenol', 'Take twice daily');
+
+INSERT INTO prescriptions (user_id, prescription_date, doctor_name, diagnosis, medications, instructions)
+VALUES (1, '2024-07-10', 'Dr. Johnson', 'Cold', 'Benadryl', 'Take once at night');
+
+-- Inserting dummy prescriptions for user with ID 2
+INSERT INTO prescriptions (user_id, prescription_date, doctor_name, diagnosis, medications, instructions)
+VALUES (2, '2024-07-11', 'Dr. Brown', 'Allergy', 'Claritin', 'Take daily in the morning');
+
+INSERT INTO prescriptions (user_id, prescription_date, doctor_name, diagnosis, medications, instructions)
+VALUES (2, '2024-07-09', 'Dr. White', 'Fever', 'Advil', 'Take as needed for fever');
+
+-- Insert more dummy prescriptions as needed for other users or testing scenarios
