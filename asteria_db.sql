@@ -196,7 +196,8 @@ CREATE TABLE booked_appointments (
     FOREIGN KEY (doctor_id) REFERENCES doctors(id)  -- Adjust based on your doctors table
 );
 ALTER TABLE booked_appointments
-ADD COLUMN status VARCHAR(50);
+ADD COLUMN status VARCHAR(50) DEFAULT 'pending';
+
 
 
 CREATE TABLE prescriptions (
