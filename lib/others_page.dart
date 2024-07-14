@@ -18,7 +18,13 @@ class OthersPage extends StatelessWidget {
               MaterialPageRoute(builder: (context) => ChecklistPage(userId: userId)),
             );
           },
-          child: Text('Go to Checklist Page'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.white, // Set button background to white
+          ),
+          child: Text(
+            'Go to Checklist Page',
+            style: TextStyle(color: Colors.black), // Set text color to black
+          ),
         ),
       ),
     );
