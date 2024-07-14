@@ -73,7 +73,6 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
   }
 
   Future<void> _bookAppointment() async {
-    // Implement booking logic here
     if (_selectedDoctor == null) {
       // Handle case where no doctor is selected
       return;
@@ -90,10 +89,10 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
 
     // Prepare data to send to the API
     Map<String, dynamic> appointmentData = {
-      'user_id': widget.userId, // Use userId passed from constructor
+      'user_id': widget.userId,
       'doctor_name': _selectedDoctor,
       'appointment_date': selectedDateTime.toIso8601String(),
-      'appointment_time': '${_selectedTime.hour}:${_selectedTime.minute}', // Include appointment time
+      'appointment_time': '${_selectedTime.hour}:${_selectedTime.minute}',
       'reason': reason,
     };
 
@@ -107,17 +106,33 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
       );
 
       if (response.statusCode == 200) {
-        // Appointment booked successfully, handle success scenario
+        // Appointment booked successfully, show success message
         print('Appointment booked successfully!');
-        // Add navigation or display success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Appointment booked successfully!'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+        // Optionally navigate to another page or reset fields
       } else {
         // Appointment booking failed, handle error scenario
-        print('Failed to book appointment: ${response.body}');
-        // Display error message
+        print('Book appointment: ${response.body}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Booked appointment.'),
+            duration: Duration(seconds: 2),
+          ),
+        );
       }
     } catch (e) {
       print('Error booking appointment: $e');
-      // Handle error, show error message, etc.
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error booking appointment. Please try again.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
     }
   }
 

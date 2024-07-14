@@ -485,13 +485,10 @@ def get_prescriptions():
 def get_appointments():
     user_id = request.args.get('user_id')
 
-    if not user_id:
-        return jsonify({"error": "user_id is required"}), 400
-
     try:
         cursor = db.cursor(dictionary=True)
         query = """
-        SELECT ba.id, ba.appointment_date, ba.appointment_time, ba.status, d.name as doctor_name
+        SELECT ba.appointment_date, ba.appointment_time, d.name AS doctor_name, ba.status
         FROM booked_appointments ba
         JOIN doctors d ON ba.doctor_id = d.id
         WHERE ba.user_id = %s
@@ -499,67 +496,30 @@ def get_appointments():
         cursor.execute(query, (user_id,))
         appointments = cursor.fetchall()
         cursor.close()
-        db.close()
 
-        # Debugging output to check data before returning
-        print("Appointments fetched:", appointments)
-
-        # Ensure all fields are JSON serializable
+        # Ensure all keys and values are serializable
         for appointment in appointments:
-            appointment['appointment_date'] = str(appointment['appointment_date'])
+            appointment['appointment_date'] = appointment['appointment_date'].isoformat()
             appointment['appointment_time'] = str(appointment['appointment_time'])
 
         return jsonify(appointments), 200
 
-    except Error as e:
+    except Exception as e:
         return jsonify({"error": f"Database error: {str(e)}"}), 500
 
 
-@app.route('/edit_appointment', methods=['POST'])
-def edit_appointment():
-    data = request.get_json()
-    appointment_id = data.get('appointment_id')
-    doctor_id = data.get('doctor_id')
-    appointment_date = data.get('appointment_date')
-    appointment_time = data.get('appointment_time')
-
-    if not appointment_id or not doctor_id or not appointment_date or not appointment_time:
-        return jsonify({"error": "appointment_id, doctor_id, appointment_date, and appointment_time are required"}), 400
-
+@app.route('/delete_appointment/<int:appointment_id>', methods=['DELETE'])
+def delete_appointment(appointment_id):
     try:
         cursor = db.cursor()
-        query = """
-        UPDATE booked_appointments
-        SET doctor_id = %s, appointment_date = %s, appointment_time = %s
-        WHERE id = %s
-        """
-        cursor.execute(query, (doctor_id, appointment_date, appointment_time, appointment_id))
+        cursor.execute("DELETE FROM booked_appointments WHERE id = %s", (appointment_id,))
         db.commit()
         cursor.close()
-        db.close()
-
-        return jsonify({"success": True}), 200
-
-    except Error as e:
-        return jsonify({"error": f"Database error: {str(e)}"}), 500
-@app.route('/delete_appointment', methods=['POST'])
-def delete_appointment():
-    appointment_id = request.json.get('appointment_id')
-
-    if not appointment_id:
-        return jsonify({"error": "appointment_id is required"}), 400
-
-    try:
-        cursor = db.cursor()
-        query = "DELETE FROM booked_appointments WHERE id = %s"
-        cursor.execute(query, (appointment_id,))
-        db.commit()
-        cursor.close()
-
         return jsonify({"message": "Appointment deleted successfully"}), 200
-
-    except Error as e:
+    except Exception as e:
         return jsonify({"error": f"Database error: {str(e)}"}), 500
+
+
 if __name__ == '__main__':
     app.run(debug=True)
 
