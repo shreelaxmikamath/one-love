@@ -198,6 +198,17 @@ CREATE TABLE booked_appointments (
 ALTER TABLE booked_appointments
 ADD COLUMN status VARCHAR(50) DEFAULT 'pending';
 
+INSERT INTO booked_appointments (user_id, doctor_id, appointment_date, appointment_time, reason, status)
+VALUES
+    (1, 1, '2024-07-14', '09:00:00', 'Routine checkup', 'pending'),
+    (1, 2, '2024-07-15', '10:30:00', 'Follow-up appointment', 'pending'),
+    (1, 3, '2024-07-16', '14:00:00', 'Medical consultation', 'pending'),
+    (2, 1, '2024-07-17', '11:00:00', 'Dental checkup', 'pending'),
+    (2, 2, '2024-07-18', '15:30:00', 'Eye exam', 'pending'),
+    (2, 3, '2024-07-19', '16:30:00', 'Physical therapy', 'pending'),
+    (3, 1, '2024-07-20', '08:30:00', 'Orthopedic consultation', 'pending'),
+    (3, 2, '2024-07-21', '13:00:00', 'Cardiology appointment', 'pending'),
+    (3, 3, '2024-07-22', '17:00:00', 'ENT checkup', 'pending');
 
 
 CREATE TABLE prescriptions (
@@ -212,18 +223,16 @@ CREATE TABLE prescriptions (
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
+
 -- Inserting dummy prescriptions for user with ID 1
 INSERT INTO prescriptions (user_id, prescription_date, doctor_name, diagnosis, medications, instructions)
-VALUES (1, '2024-07-12', 'Dr. Smith', 'Headache', 'Tylenol', 'Take twice daily');
-
-INSERT INTO prescriptions (user_id, prescription_date, doctor_name, diagnosis, medications, instructions)
-VALUES (1, '2024-07-10', 'Dr. Johnson', 'Cold', 'Benadryl', 'Take once at night');
-
--- Inserting dummy prescriptions for user with ID 2
-INSERT INTO prescriptions (user_id, prescription_date, doctor_name, diagnosis, medications, instructions)
-VALUES (2, '2024-07-11', 'Dr. Brown', 'Allergy', 'Claritin', 'Take daily in the morning');
-
-INSERT INTO prescriptions (user_id, prescription_date, doctor_name, diagnosis, medications, instructions)
-VALUES (2, '2024-07-09', 'Dr. White', 'Fever', 'Advil', 'Take as needed for fever');
-
--- Insert more dummy prescriptions as needed for other users or testing scenarios
+VALUES
+    (1, '2024-07-14', 'Dr. Lily', 'Common cold', 'Aspirin, Vitamin C', 'Take rest and drink plenty of fluids'),
+    (1, '2024-07-15', 'Dr. Jessica ', 'Allergic reaction', 'Antihistamines', 'Avoid allergens and take medication as prescribed'),
+    (1, '2024-07-16', 'Dr. Williams', 'Back pain', 'Muscle relaxants, Painkillers', 'Apply ice, gentle stretching, and rest'),
+    (2, '2024-07-17', 'Dr. Lily', 'High blood pressure', 'Beta-blockers', 'Monitor blood pressure regularly and follow diet and exercise regimen'),
+    (2, '2024-07-18', 'Dr. Jessica ', 'Diabetes management', 'Insulin, Metformin', 'Monitor blood sugar levels and follow dietary recommendations'),
+    (2, '2024-07-19', 'Dr. Williams', 'Anxiety', 'SSRIs', 'Practice relaxation techniques and cognitive-behavioral therapy'),
+    (3, '2024-07-20', 'Dr. Lily', 'Sinus infection', 'Antibiotics', 'Complete full course of medication and stay hydrated'),
+    (3, '2024-07-21', 'Dr. Jessica ', 'Asthma control', 'Inhalers', 'Avoid triggers and use inhalers as directed'),
+    (3, '2024-07-22', 'Dr. Williams', 'Joint pain', 'Pain relievers, Physical therapy', 'Follow physical therapy exercises and medication schedule');

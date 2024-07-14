@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'appointments_page.dart';
 import 'prescriptions_page.dart';
-import 'appointments_list_page.dart'; // Import the new dummy file
+import 'appointments_list_page.dart';
 
 class InsightsPage extends StatelessWidget {
   final String userId;
-
   InsightsPage({required this.userId});
 
   @override
@@ -17,74 +16,58 @@ class InsightsPage extends StatelessWidget {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
                 Expanded(
-                  child: Card(
-                    elevation: 4,
-                    child: ListTile(
-                      contentPadding: EdgeInsets.all(16.0),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10.0),
-                      ),
-                      title: Text('Book Appointment'),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => AppointmentsPage(userId: userId)),
-                        );
-                      },
-                    ),
-                  ),
+                  child: _buildCard('Book Appointment', () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => AppointmentsPage(userId: userId)),
+                    );
+                  }),
                 ),
                 SizedBox(width: 16),
                 Expanded(
-                  child: Card(
-                    elevation: 4,
-                    child: ListTile(
-                      contentPadding: EdgeInsets.all(16.0),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10.0),
-                      ),
-                      title: Text('View Prescriptions'),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => PrescriptionsPage(userId: userId)),
-                        );
-                      },
-                    ),
-                  ),
+                  child: _buildCard(' My Appointments', () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => AppointmentsListPage(userId: userId)),
+                    );
+                  }),
                 ),
               ],
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
-                  child: Card(
-                    elevation: 4,
-                    child: ListTile(
-                      contentPadding: EdgeInsets.all(16.0),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10.0),
-                      ),
-                      title: Text('View Appointments'), // New tab
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => AppointmentsListPage(userId: userId)), // Navigate to the new dummy page
-                        );
-                      },
-                    ),
-                  ),
+                  child: _buildCard('View Prescriptions', () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => PrescriptionsPage(userId: userId)),
+                    );
+                  }),
                 ),
+                Expanded(child: SizedBox()), // This creates an empty space to balance the row
               ],
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCard(String title, VoidCallback onTap) {
+    return Card(
+      elevation: 4,
+      child: ListTile(
+        contentPadding: EdgeInsets.all(16.0),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10.0),
+        ),
+        title: Text(title),
+        onTap: onTap,
       ),
     );
   }
