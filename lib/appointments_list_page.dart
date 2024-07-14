@@ -188,7 +188,7 @@ class _AppointmentsListPageState extends State<AppointmentsListPage> {
         title: Text('Appointments List'),
       ),
       body: appointments.isEmpty
-          ? Center(child: CircularProgressIndicator())
+          ? Center(child: Text('No Appointments Yet!!'))
           : ListView.builder(
         padding: const EdgeInsets.all(16.0),
         itemCount: appointments.length,
