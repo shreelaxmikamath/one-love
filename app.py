@@ -4,8 +4,11 @@ from mysql.connector import Error
 import os
 import json
 import pandas as pd
-app = Flask(__name__)
 
+from flask_cors import CORS
+
+app = Flask(__name__)
+CORS(app)
 # Establish database connection
 try:
     db = mysql.connector.connect(
@@ -549,8 +552,9 @@ def update_appointment():
     except Exception as e:
         return jsonify({"error": f"Database error: {str(e)}"}), 500
 
-male_names = pd.read_csv('male_names.csv')  # Replace with your actual path
-female_names = pd.read_csv('female_names.csv')  # Replace with your actual path
+# Load your datasets once when the server starts
+male_names = pd.read_csv('assets/boys_names.csv')
+female_names = pd.read_csv('assets/girls_names.csv')
 
 @app.route('/suggest_names', methods=['POST'])
 def suggest_names():
@@ -560,9 +564,9 @@ def suggest_names():
     gender = data.get('gender')  # 'Male' or 'Female'
 
     if gender == 'Male':
-        names = male_names['name']  # Assuming your column is named 'name'
+        names = male_names['name'].dropna()  # Drop NaN values
     else:
-        names = female_names['name']
+        names = female_names['name'].dropna()  # Drop NaN values
 
     if letter_position == 'First':
         suggested_names = names[names.str.startswith(letter)].tolist()

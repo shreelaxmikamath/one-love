@@ -14,23 +14,54 @@ class _BabyNamesPageState extends State<BabyNamesPage> {
 
   void _suggestNames() async {
     if (selectedLetter != null && selectedGender != null) {
-      var response = await http.post(
-        Uri.parse('http://10.0.2.2:5000/suggest_names'), // Replace with your Flask API URL
-        headers: {"Content-Type": "application/json"},
-        body: json.encode({
-          'letter_position': selectedLetter,
-          'letter': 'A',  // Example letter, replace with user input
-          'gender': selectedGender,
-        }),
-      );
+      String letter = '';
 
-      if (response.statusCode == 200) {
-        setState(() {
-          suggestedNames = List<String>.from(json.decode(response.body));
-        });
-      } else {
-        print("Failed to fetch names!");
-      }
+      // Show a dialog to input the letter
+      showDialog(
+        context: context,
+        builder: (context) {
+          String userInput = '';
+          return AlertDialog(
+            title: Text('Enter Letter'),
+            content: TextField(
+              onChanged: (value) {
+                userInput = value;
+              },
+              decoration: InputDecoration(hintText: 'Enter a letter'),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  letter = userInput;
+                  Navigator.of(context).pop();
+                  _fetchSuggestedNames(letter);
+                },
+                child: Text('Submit'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
+  void _fetchSuggestedNames(String letter) async {
+    var response = await http.post(
+      Uri.parse('http://10.0.2.2:5000/suggest_names'), // Replace with your Flask API URL
+      headers: {"Content-Type": "application/json"},
+      body: json.encode({
+        'letter_position': selectedLetter,
+        'letter': letter,
+        'gender': selectedGender,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        suggestedNames = List<String>.from(json.decode(response.body));
+      });
+    } else {
+      print("Failed to fetch names!");
     }
   }
 
