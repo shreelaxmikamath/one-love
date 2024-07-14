@@ -26,8 +26,8 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
 
   Future<void> _fetchDoctors() async {
     try {
-      final response =
-      await http.get(Uri.parse('http://10.0.2.2:5000/doctors'));
+      final response = await http.get(
+          Uri.parse('http://10.0.2.2:5000/doctors'));
 
       if (response.statusCode == 200) {
         List<dynamic> doctorsData = json.decode(response.body);
@@ -42,7 +42,12 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
       }
     } catch (e) {
       print('Error fetching doctors: $e');
-      // Handle error, show error message, etc.
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to load doctors. Please try again.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
     }
   }
 
@@ -74,7 +79,12 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
 
   Future<void> _bookAppointment() async {
     if (_selectedDoctor == null) {
-      // Handle case where no doctor is selected
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please select a doctor'),
+          duration: Duration(seconds: 2),
+        ),
+      );
       return;
     }
 
@@ -87,7 +97,6 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
       _selectedTime.minute,
     );
 
-    // Prepare data to send to the API
     Map<String, dynamic> appointmentData = {
       'user_id': widget.userId,
       'doctor_name': _selectedDoctor,
@@ -105,22 +114,19 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
         body: jsonEncode(appointmentData),
       );
 
-      if (response.statusCode == 200) {
-        // Appointment booked successfully, show success message
-        print('Appointment booked successfully!');
+      if (response.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Appointment booked successfully!'),
             duration: Duration(seconds: 2),
           ),
         );
-        // Optionally navigate to another page or reset fields
+        Navigator.of(context).pop();
       } else {
-        // Appointment booking failed, handle error scenario
-        print('Book appointment: ${response.body}');
+        print('Book appointment failed: ${response.body}');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Booked appointment.'),
+            content: Text('Failed to book appointment. Please try again.'),
             duration: Duration(seconds: 2),
           ),
         );
@@ -140,81 +146,146 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Appointments'),
+        title: Text('Book Appointment'),
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Container(
-              color: Colors.white,
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: DropdownButton<String>(
-                isExpanded: true,
-                value: _selectedDoctor,
-                hint: Text('Select a doctor'),
-                onChanged: (newValue) {
-                  setState(() {
-                    _selectedDoctor = newValue;
-                  });
-                },
-                items: _doctors.map((doctor) {
-                  return DropdownMenuItem<String>(
-                    value: doctor,
-                    child: Text(doctor),
-                  );
-                }).toList(),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.3),
+                    spreadRadius: 1,
+                    blurRadius: 2,
+                    offset: Offset(0, 1),
+                  ),
+                ],
+              ),
+              child: DropdownButtonHideUnderline(
+                child: ButtonTheme(
+                  alignedDropdown: true,
+                  child: DropdownButton<String>(
+                    isExpanded: true,
+                    value: _selectedDoctor,
+                    hint: Text('Select a doctor', style: TextStyle(color: Colors.black)), // Add style here
+                    onChanged: (newValue) {
+                      setState(() {
+                        _selectedDoctor = newValue;
+                      });
+                    },
+                    items: _doctors.map((doctor) {
+                      return DropdownMenuItem<String>(
+                        value: doctor,
+                        child: Text(doctor, style: TextStyle(color: Colors.black)), // Add style here as well
+                      );
+                    }).toList(),
+                    dropdownColor: Colors.white,
+                    style: TextStyle(color: Colors.black), // Add this line to set the general text style
+                  ),
+                ),
               ),
             ),
             SizedBox(height: 16),
-            InkWell(
-              onTap: () => _selectDate(context),
-              child: InputDecorator(
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.3),
+                    spreadRadius: 1,
+                    blurRadius: 2,
+                    offset: Offset(0, 1),
+                  ),
+                ],
+              ),
+              child: InkWell(
+                onTap: () => _selectDate(context),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('${_selectedDate.day}/${_selectedDate
+                          .month}/${_selectedDate.year}'),
+                      Icon(Icons.calendar_today),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: 16),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.3),
+                    spreadRadius: 1,
+                    blurRadius: 2,
+                    offset: Offset(0, 1),
+                  ),
+                ],
+              ),
+              child: InkWell(
+                onTap: () => _selectTime(context),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('${_selectedTime.format(context)}'),
+                      Icon(Icons.access_time),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: 16),Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.3),
+                    spreadRadius: 1,
+                    blurRadius: 2,
+                    offset: Offset(0, 1),
+                  ),
+                ],
+              ),
+              child: TextField(
+                controller: _reasonController,
                 decoration: InputDecoration(
-                  labelText: 'Select Date',
-                  border: OutlineInputBorder(),
+                  labelText: 'Reason for Appointment',
+                  labelStyle: TextStyle(color: Colors.black), // Add this line
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.all(16),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                        '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}'),
-                    Icon(Icons.calendar_today),
-                  ],
-                ),
+                maxLines: 3,
               ),
             ),
-            SizedBox(height: 16),
-            InkWell(
-              onTap: () => _selectTime(context),
-              child: InputDecorator(
-                decoration: InputDecoration(
-                  labelText: 'Select Time',
-                  border: OutlineInputBorder(),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('${_selectedTime.format(context)}'),
-                    Icon(Icons.access_time),
-                  ],
-                ),
-              ),
-            ),
-            SizedBox(height: 16),
-            TextField(
-              controller: _reasonController,
-              decoration: InputDecoration(
-                labelText: 'Reason for Appointment',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _bookAppointment,
-              child: Text('Book Appointment'),
-            ),
+            SizedBox(height: 24),
+      ElevatedButton(
+        onPressed: _bookAppointment,
+        child: Text(
+          'Book Appointment',
+          style: TextStyle(color: Colors.black), // Add this line
+        ),
+        style: ElevatedButton.styleFrom(
+          padding: EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          backgroundColor: Colors.white, // Add this line to make the button background white
+        ),
+      ),
           ],
         ),
       ),

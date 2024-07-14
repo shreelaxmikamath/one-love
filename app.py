@@ -526,6 +526,7 @@ def delete_appointment():
         return jsonify({"message": "Appointment deleted successfully"}), 200
     except Exception as e:
         return jsonify({"error": f"Database error: {str(e)}"}), 500
+    
 @app.route('/update_appointment', methods=['PUT'])
 def update_appointment():
     data = request.get_json()
