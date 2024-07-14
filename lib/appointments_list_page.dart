@@ -21,7 +21,7 @@ class _AppointmentsListPageState extends State<AppointmentsListPage> {
   }
 
   Future<void> fetchAppointments() async {
-    final url = 'http://10.0.2.2:5000/get_appointments?user_id=${widget.userId}'; // Use the userId passed from constructor
+    final url = 'http://10.0.2.2:5000/get_appointments?user_id=${widget.userId}';
     final response = await http.get(Uri.parse(url));
 
     if (response.statusCode == 200) {
@@ -29,8 +29,34 @@ class _AppointmentsListPageState extends State<AppointmentsListPage> {
         appointments = jsonDecode(response.body) as List<dynamic>;
       });
     } else {
-      // Handle error fetching appointments
       print('Failed to fetch appointments: ${response.statusCode}');
+    }
+  }
+
+  Future<void> deleteAppointment(String appointmentDate, String appointmentTime) async {
+    final url = 'http://10.0.2.2:5000/delete_appointment';
+    final response = await http.delete(
+      Uri.parse(url),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode({
+        'user_id': widget.userId,
+        'appointment_date': appointmentDate,
+        'appointment_time': appointmentTime,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        appointments.removeWhere((appointment) =>
+        appointment['appointment_date'] == appointmentDate &&
+            appointment['appointment_time'] == appointmentTime);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Appointment deleted successfully')));
+    } else {
+      print('Failed to delete appointment: ${response.statusCode}');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to delete appointment')));
     }
   }
 
@@ -42,7 +68,7 @@ class _AppointmentsListPageState extends State<AppointmentsListPage> {
       ),
       body: appointments.isEmpty
           ? Center(
-        child: CircularProgressIndicator(), // Show loading indicator while fetching
+        child: CircularProgressIndicator(),
       )
           : ListView.builder(
         padding: const EdgeInsets.all(16.0),
@@ -55,7 +81,13 @@ class _AppointmentsListPageState extends State<AppointmentsListPage> {
             child: ListTile(
               contentPadding: EdgeInsets.all(16.0),
               title: Text('${appointment['appointment_date']} - ${appointment['appointment_time']}'),
-              subtitle: Text('Doctor: ${appointment['doctor_name']}\nStatus: ${appointment['status']}'), // Display status here
+              subtitle: Text('Doctor: ${appointment['doctor_name']} - Status: ${appointment['status']}'),
+              trailing: IconButton(
+                icon: Icon(Icons.delete),
+                onPressed: () {
+                  deleteAppointment(appointment['appointment_date'], appointment['appointment_time']);
+                },
+              ),
               onTap: () {
                 // You can add navigation to appointment details if needed
               },

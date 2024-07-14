@@ -508,11 +508,19 @@ def get_appointments():
         return jsonify({"error": f"Database error: {str(e)}"}), 500
 
 
-@app.route('/delete_appointment/<int:appointment_id>', methods=['DELETE'])
-def delete_appointment(appointment_id):
+@app.route('/delete_appointment', methods=['DELETE'])
+def delete_appointment():
+    data = request.get_json()
+    user_id = data.get('user_id')
+    appointment_date = data.get('appointment_date')
+    appointment_time = data.get('appointment_time')
+
     try:
         cursor = db.cursor()
-        cursor.execute("DELETE FROM booked_appointments WHERE id = %s", (appointment_id,))
+        cursor.execute("""
+            DELETE FROM booked_appointments 
+            WHERE user_id = %s AND appointment_date = %s AND appointment_time = %s
+        """, (user_id, appointment_date, appointment_time))
         db.commit()
         cursor.close()
         return jsonify({"message": "Appointment deleted successfully"}), 200
