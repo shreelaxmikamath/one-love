@@ -3,7 +3,7 @@ import mysql.connector
 from mysql.connector import Error
 import os
 import json
-
+import pandas as pd
 app = Flask(__name__)
 
 # Establish database connection
@@ -549,7 +549,27 @@ def update_appointment():
     except Exception as e:
         return jsonify({"error": f"Database error: {str(e)}"}), 500
 
+male_names = pd.read_csv('male_names.csv')  # Replace with your actual path
+female_names = pd.read_csv('female_names.csv')  # Replace with your actual path
 
+@app.route('/suggest_names', methods=['POST'])
+def suggest_names():
+    data = request.json
+    letter_position = data.get('letter_position')  # 'First' or 'Last'
+    letter = data.get('letter')
+    gender = data.get('gender')  # 'Male' or 'Female'
+
+    if gender == 'Male':
+        names = male_names['name']  # Assuming your column is named 'name'
+    else:
+        names = female_names['name']
+
+    if letter_position == 'First':
+        suggested_names = names[names.str.startswith(letter)].tolist()
+    else:
+        suggested_names = names[names.str.endswith(letter)].tolist()
+
+    return jsonify(suggested_names)
 
 if __name__ == '__main__':
     app.run(debug=True)
