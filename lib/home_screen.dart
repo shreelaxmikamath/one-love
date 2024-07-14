@@ -7,6 +7,7 @@ import 'notifications_page.dart';
 import 'account_page.dart';
 import 'insights_page.dart';
 import 'others_page.dart';
+import 'exercise_page.dart'; // Import the new exercise page
 
 class HomeScreen extends StatefulWidget {
   final String userId;
@@ -164,7 +165,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildPopularTools() {
-    List<String> tools = ["Tool 1", "Tool 2", "Tool 3"]; // Replace with actual tool names
+    List<String> tools = ["Exercise", "Tool 2", "Tool 3"]; // Replace with actual tool names
     return Column(
       children: [
         Text(
@@ -178,21 +179,32 @@ class _HomeScreenState extends State<HomeScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: tools.map((tool) {
-            return Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                color: Colors.orangeAccent,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Center(
-                child: Text(
-                  tool,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
+            return GestureDetector(
+              onTap: () {
+                if (tool == "Exercise") {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => ExercisePage(userId: widget.userId)),
+                  );
+                }
+                // Add other tool navigation logic here
+              },
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  color: Colors.orangeAccent,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Center(
+                  child: Text(
+                    tool,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
                 ),
               ),
             );
