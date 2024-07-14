@@ -526,6 +526,28 @@ def delete_appointment():
         return jsonify({"message": "Appointment deleted successfully"}), 200
     except Exception as e:
         return jsonify({"error": f"Database error: {str(e)}"}), 500
+@app.route('/update_appointment', methods=['PUT'])
+def update_appointment():
+    data = request.get_json()
+    user_id = data.get('user_id')
+    appointment_date = data.get('appointment_date')
+    appointment_time = data.get('appointment_time')
+    new_date = data.get('new_date')
+    new_time = data.get('new_time')
+
+    try:
+        cursor = db.cursor()
+        cursor.execute("""
+            UPDATE booked_appointments 
+            SET appointment_date = %s, appointment_time = %s
+            WHERE user_id = %s AND appointment_date = %s AND appointment_time = %s
+        """, (new_date, new_time, user_id, appointment_date, appointment_time))
+        db.commit()
+        cursor.close()
+        return jsonify({"message": "Appointment updated successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
+
 
 
 if __name__ == '__main__':

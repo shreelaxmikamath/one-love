@@ -12,12 +12,12 @@ class AppointmentsListPage extends StatefulWidget {
 }
 
 class _AppointmentsListPageState extends State<AppointmentsListPage> {
-  List<dynamic> appointments = []; // List to store appointments
+  List<dynamic> appointments = [];
 
   @override
   void initState() {
     super.initState();
-    fetchAppointments(); // Fetch appointments when the page loads
+    fetchAppointments();
   }
 
   Future<void> fetchAppointments() async {
@@ -30,6 +30,127 @@ class _AppointmentsListPageState extends State<AppointmentsListPage> {
       });
     } else {
       print('Failed to fetch appointments: ${response.statusCode}');
+    }
+  }
+
+  Future<void> updateAppointment(String appointmentDate, String appointmentTime) async {
+    final updatedDetails = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (BuildContext context) {
+        DateTime newDate = DateTime.parse(appointmentDate);
+        TimeOfDay newTime = TimeOfDay(
+          hour: int.parse(appointmentTime.split(':')[0]),
+          minute: int.parse(appointmentTime.split(':')[1]),
+        );
+
+        return AlertDialog(
+          title: Text('Update Appointment'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              InkWell(
+                onTap: () async {
+                  final pickedDate = await showDatePicker(
+                    context: context,
+                    initialDate: newDate,
+                    firstDate: DateTime.now(),
+                    lastDate: DateTime(2100),
+                  );
+                  if (pickedDate != null) {
+                    setState(() {
+                      newDate = pickedDate;
+                    });
+                  }
+                },
+                child: InputDecorator(
+                  decoration: InputDecoration(labelText: 'Select Date'),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('${newDate.day}/${newDate.month}/${newDate.year}'),
+                      Icon(Icons.calendar_today),
+                    ],
+                  ),
+                ),
+              ),
+              InkWell(
+                onTap: () async {
+                  final pickedTime = await showTimePicker(
+                    context: context,
+                    initialTime: newTime,
+                  );
+                  if (pickedTime != null) {
+                    setState(() {
+                      newTime = pickedTime;
+                    });
+                  }
+                },
+                child: InputDecorator(
+                  decoration: InputDecoration(labelText: 'Select Time'),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('${newTime.hour.toString().padLeft(2, '0')}:${newTime.minute.toString().padLeft(2, '0')}'),
+                      Icon(Icons.access_time),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop({
+                  'date': newDate.toIso8601String(),
+                  'time': '${newTime.hour}:${newTime.minute}',
+                });
+              },
+              child: Text('Update'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (updatedDetails != null) {
+      final url = 'http://10.0.2.2:5000/update_appointment';
+      final response = await http.put(
+        Uri.parse(url),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode({
+          'user_id': widget.userId,
+          'appointment_date': appointmentDate,
+          'appointment_time': appointmentTime,
+          'new_date': updatedDetails['date'],
+          'new_time': updatedDetails['time'],
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          var appointmentIndex = appointments.indexWhere((appt) =>
+          appt['appointment_date'] == appointmentDate &&
+              appt['appointment_time'] == appointmentTime);
+
+          if (appointmentIndex != -1) {
+            appointments[appointmentIndex]['appointment_date'] = updatedDetails['date'];
+            appointments[appointmentIndex]['appointment_time'] = updatedDetails['time'];
+          }
+        });
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Appointment updated successfully')));
+      } else {
+        print('Failed to update appointment: ${response.statusCode}');
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update appointment')));
+      }
     }
   }
 
@@ -67,9 +188,7 @@ class _AppointmentsListPageState extends State<AppointmentsListPage> {
         title: Text('Appointments List'),
       ),
       body: appointments.isEmpty
-          ? Center(
-        child: CircularProgressIndicator(),
-      )
+          ? Center(child: CircularProgressIndicator())
           : ListView.builder(
         padding: const EdgeInsets.all(16.0),
         itemCount: appointments.length,
@@ -82,15 +201,23 @@ class _AppointmentsListPageState extends State<AppointmentsListPage> {
               contentPadding: EdgeInsets.all(16.0),
               title: Text('${appointment['appointment_date']} - ${appointment['appointment_time']}'),
               subtitle: Text('Doctor: ${appointment['doctor_name']} - Status: ${appointment['status']}'),
-              trailing: IconButton(
-                icon: Icon(Icons.delete),
-                onPressed: () {
-                  deleteAppointment(appointment['appointment_date'], appointment['appointment_time']);
-                },
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.edit),
+                    onPressed: () {
+                      updateAppointment(appointment['appointment_date'], appointment['appointment_time']);
+                    },
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.delete),
+                    onPressed: () {
+                      deleteAppointment(appointment['appointment_date'], appointment['appointment_time']);
+                    },
+                  ),
+                ],
               ),
-              onTap: () {
-                // You can add navigation to appointment details if needed
-              },
             ),
           );
         },
