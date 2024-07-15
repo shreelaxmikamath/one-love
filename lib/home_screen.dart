@@ -7,6 +7,17 @@ import 'notifications_page.dart';
 import 'account_page.dart';
 import 'insights_page.dart';
 import 'others_page.dart';
+import 'pregnancy_weeks/week3.dart'; // Import for Week 3 Page
+import 'pregnancy_weeks/week4.dart';
+import 'pregnancy_weeks/week5.dart';
+import 'pregnancy_weeks/week6.dart';
+import 'pregnancy_weeks/week7.dart';
+import 'pregnancy_weeks/week8.dart';
+import 'pregnancy_weeks/week9.dart';
+import 'pregnancy_weeks/week10.dart';
+import 'baby_names_page.dart';
+
+
 
 class HomeScreen extends StatefulWidget {
   final String userId;
@@ -137,20 +148,94 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildPregnancyWeekBoxes() {
     List<Widget> weekBoxes = List.generate(38, (index) {
       int weekNumber = index + 3; // Weeks from 3 to 41
-      return Container(
-        width: 40,
-        height: 40,
-        margin: EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          color: Colors.lightBlueAccent,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Center(
-          child: Text(
-            '$weekNumber',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
+      return GestureDetector(
+        onTap: () {
+          if (weekNumber == 3) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => Week3Page(),
+              ),
+            );
+          }
+          // Add more conditions for other week pages here as needed
+          if (weekNumber == 4) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => Week4Page(),
+              ),
+            );
+          }
+          if (weekNumber == 5) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => Week5Page(),
+              ),
+            );
+          }
+          if (weekNumber == 6) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => Week6Page(),
+              ),
+            );
+          }
+          if (weekNumber == 7) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => Week7Page(),
+              ),
+            );
+          }
+          if (weekNumber == 7) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => Week7Page(),
+              ),
+            );
+          }if (weekNumber == 8) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => Week8Page(),
+              ),
+            );
+          }if (weekNumber == 9) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => Week9Page(),
+              ),
+            );
+          }if (weekNumber == 10) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => Week10Page(),
+              ),
+            );
+          }
+        },
+        child: Container(
+          width: 40,
+          height: 40,
+          margin: EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: Colors.lightBlueAccent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Center(
+            child: Text(
+              '$weekNumber',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ),
@@ -164,7 +249,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildPopularTools() {
-    List<String> tools = ["Tool 1", "Tool 2", "Tool 3"]; // Replace with actual tool names
+    List<String> tools = ["Tool 1", "Baby Names", "Tool 3"]; // Replace with actual tool names
     return Column(
       children: [
         Text(
@@ -178,21 +263,31 @@ class _HomeScreenState extends State<HomeScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: tools.map((tool) {
-            return Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                color: Colors.orangeAccent,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Center(
-                child: Text(
-                  tool,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
+            return GestureDetector(
+              onTap: () {
+                if (tool == "Baby Names") {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => BabyNamesPage()),
+                  );
+                }
+              },
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  color: Colors.orangeAccent,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Center(
+                  child: Text(
+                    tool,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
                 ),
               ),
             );
@@ -248,29 +343,25 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView( // Wrap content in SingleChildScrollView
-        padding: const EdgeInsets.symmetric(vertical: 40.0, horizontal: 16.0),
-        child: Column(
-          children: [
-            _buildWeeklyCalendar(), // Weekly calendar placed here
-            SizedBox(height: 16),
-            _buildImageSlideshow(),
-            SizedBox(height: 16),
-            _buildPopularTools(),
-            SizedBox(height: 16),
-            Text(
-              'Pregnancy Week by Week',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 16),
-            _buildPregnancyWeekBoxes(),
-          ],
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              _buildImageSlideshow(),
+              SizedBox(height: 20),
+              _buildWeeklyCalendar(),
+              SizedBox(height: 20),
+              _buildPopularTools(),
+              SizedBox(height: 20),
+              _buildPregnancyWeekBoxes(),
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -285,8 +376,6 @@ class _HomeScreenState extends State<HomeScreen> {
             label: 'Others',
           ),
         ],
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
       ),
     );
   }
