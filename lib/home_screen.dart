@@ -15,6 +15,36 @@ import 'pregnancy_weeks/week7.dart';
 import 'pregnancy_weeks/week8.dart';
 import 'pregnancy_weeks/week9.dart';
 import 'pregnancy_weeks/week10.dart';
+import 'pregnancy_weeks/week11.dart';
+import 'pregnancy_weeks/week12.dart';
+import 'pregnancy_weeks/week13.dart';
+import 'pregnancy_weeks/week14.dart';
+import 'pregnancy_weeks/week15.dart';
+import 'pregnancy_weeks/week16.dart';
+import 'pregnancy_weeks/week17.dart';
+import 'pregnancy_weeks/week18.dart';
+import 'pregnancy_weeks/week19.dart';
+import 'pregnancy_weeks/week20.dart';
+import 'pregnancy_weeks/week21.dart';
+import 'pregnancy_weeks/week22.dart';
+import 'pregnancy_weeks/week23.dart';
+import 'pregnancy_weeks/week24.dart';
+import 'pregnancy_weeks/week25.dart';
+import 'pregnancy_weeks/week26.dart';
+import 'pregnancy_weeks/week27.dart';
+import 'pregnancy_weeks/week28.dart';
+import 'pregnancy_weeks/week29.dart';
+import 'pregnancy_weeks/week30.dart';
+import 'pregnancy_weeks/week31.dart';
+import 'pregnancy_weeks/week32.dart';
+import 'pregnancy_weeks/week33.dart';
+import 'pregnancy_weeks/week34.dart';
+import 'pregnancy_weeks/week35.dart';
+import 'pregnancy_weeks/week36.dart';
+import 'pregnancy_weeks/week37.dart';
+import 'pregnancy_weeks/week38.dart';
+import 'pregnancy_weeks/week39.dart';
+import 'pregnancy_weeks/week40.dart';
 import 'baby_names_page.dart';
 
 
@@ -147,79 +177,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildPregnancyWeekBoxes() {
     List<Widget> weekBoxes = List.generate(38, (index) {
-      int weekNumber = index + 3; // Weeks from 3 to 41
+      int weekNumber = index + 3; // Weeks from 3 to 40
       return GestureDetector(
         onTap: () {
-          if (weekNumber == 3) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const Week3Page(),
-              ),
-            );
-          }
-          // Add more conditions for other week pages here as needed
-          if (weekNumber == 4) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const Week4Page(),
-              ),
-            );
-          }
-          if (weekNumber == 5) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const Week5Page(),
-              ),
-            );
-          }
-          if (weekNumber == 6) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const Week6Page(),
-              ),
-            );
-          }
-          if (weekNumber == 7) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const Week7Page(),
-              ),
-            );
-          }
-          if (weekNumber == 7) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const Week7Page(),
-              ),
-            );
-          }if (weekNumber == 8) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const Week8Page(),
-              ),
-            );
-          }if (weekNumber == 9) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const Week9Page(),
-              ),
-            );
-          }if (weekNumber == 10) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const Week10Page(),
-              ),
-            );
-          }
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => _getWeekPage(weekNumber),
+            ),
+          );
         },
         child: Container(
           width: 40,
@@ -246,6 +212,89 @@ class _HomeScreenState extends State<HomeScreen> {
       alignment: WrapAlignment.center,
       children: weekBoxes,
     );
+  }
+
+  Widget _getWeekPage(int weekNumber) {
+    switch (weekNumber) {
+      case 3:
+        return const Week3Page();
+      case 4:
+        return const Week4Page();
+      case 5:
+        return const Week5Page();
+      case 6:
+        return const Week6Page();
+      case 7:
+        return const Week7Page();
+      case 8:
+        return const Week8Page();
+      case 9:
+        return const Week9Page();
+      case 10:
+        return const Week10Page();
+      case 11:
+        return const Week11Page();
+      case 12:
+        return const Week12Page();
+      case 13:
+        return const Week13Page();
+      case 14:
+        return const Week14Page();
+      case 15:
+        return const Week15Page();
+      case 16:
+        return const Week16Page();
+      case 17:
+        return const Week17Page();
+      case 18:
+        return const Week18Page();
+      case 19:
+        return const Week19Page();
+      case 20:
+        return const Week20Page();
+      case 21:
+        return const Week21Page();
+      case 22:
+        return const Week22Page();
+      case 23:
+        return const Week23Page();
+      case 24:
+        return const Week24Page();
+      case 25:
+        return const Week25Page();
+      case 26:
+        return const Week26Page();
+      case 27:
+        return const Week27Page();
+      case 28:
+        return const Week28Page();
+      case 29:
+        return const Week29Page();
+      case 30:
+        return const Week30Page();
+      case 31:
+        return const Week31Page();
+      case 32:
+        return const Week32Page();
+      case 33:
+        return const Week33Page();
+      case 34:
+        return const Week34Page();
+      case 35:
+        return const Week35Page();
+      case 36:
+        return const Week36Page();
+      case 37:
+        return const Week37Page();
+      case 38:
+        return const Week38Page();
+      case 39:
+        return const Week39Page();
+      case 40:
+        return const Week40Page();
+      default:
+        return const SizedBox(); // Handle cases where no page is found
+    }
   }
 
   Widget _buildPopularTools() {
