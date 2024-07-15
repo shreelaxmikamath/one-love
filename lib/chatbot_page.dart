@@ -3,6 +3,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class ChatbotScreen extends StatefulWidget {
+  const ChatbotScreen({super.key});
+
   @override
   _ChatbotScreenState createState() => _ChatbotScreenState();
 }
@@ -34,7 +36,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Chatbot'),
+        title: const Text('Chatbot'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -42,16 +44,16 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           children: [
             TextField(
               controller: _controller,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Enter your message',
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             ElevatedButton(
               onPressed: _sendMessage,
-              child: Text('Send'),
+              child: const Text('Send'),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Text(_response),
           ],
         ),

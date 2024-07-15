@@ -3,7 +3,7 @@ final ThemeData pastelPinkTheme = ThemeData(
   primaryColor: Colors.pink[100]!,
   colorScheme: ColorScheme.light(
     secondary: Colors.pink[200]!,
-    background: Colors.pink[50]!,
+    surface: Colors.pink[50]!,
   ),
   brightness: Brightness.light,
   textTheme: TextTheme(
@@ -20,7 +20,7 @@ final ThemeData pastelBlueTheme = ThemeData(
   primaryColor: Colors.blue[100]!,
   colorScheme: ColorScheme.light(
     secondary: Colors.blue[200]!,
-    background: Colors.blue[50]!,
+    surface: Colors.blue[50]!,
   ),
   brightness: Brightness.light,
   textTheme: TextTheme(
@@ -37,7 +37,7 @@ final ThemeData pastelGreenTheme = ThemeData(
   primaryColor: Colors.green[100]!,
   colorScheme: ColorScheme.light(
     secondary: Colors.green[200]!,
-    background: Colors.green[50]!,
+    surface: Colors.green[50]!,
   ),
   brightness: Brightness.light,
   textTheme: TextTheme(

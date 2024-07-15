@@ -5,7 +5,7 @@ import 'dart:convert';
 class AppointmentsPage extends StatefulWidget {
   final String userId;
 
-  AppointmentsPage({required this.userId});
+  const AppointmentsPage({super.key, required this.userId});
 
   @override
   _AppointmentsPageState createState() => _AppointmentsPageState();
@@ -16,7 +16,7 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
   String? _selectedDoctor;
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _selectedTime = TimeOfDay.now();
-  TextEditingController _reasonController = TextEditingController();
+  final TextEditingController _reasonController = TextEditingController();
 
   @override
   void initState() {
@@ -43,7 +43,7 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
     } catch (e) {
       print('Error fetching doctors: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Failed to load doctors. Please try again.'),
           duration: Duration(seconds: 2),
         ),
@@ -80,7 +80,7 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
   Future<void> _bookAppointment() async {
     if (_selectedDoctor == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Please select a doctor'),
           duration: Duration(seconds: 2),
         ),
@@ -116,7 +116,7 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
 
       if (response.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('Appointment booked successfully!'),
             duration: Duration(seconds: 2),
           ),
@@ -125,7 +125,7 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
       } else {
         print('Book appointment failed: ${response.body}');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('Failed to book appointment. Please try again.'),
             duration: Duration(seconds: 2),
           ),
@@ -134,7 +134,7 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
     } catch (e) {
       print('Error booking appointment: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Error booking appointment. Please try again.'),
           duration: Duration(seconds: 2),
         ),
@@ -146,7 +146,7 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Book Appointment'),
+        title: const Text('Book Appointment'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -162,7 +162,7 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
                     color: Colors.grey.withOpacity(0.3),
                     spreadRadius: 1,
                     blurRadius: 2,
-                    offset: Offset(0, 1),
+                    offset: const Offset(0, 1),
                   ),
                 ],
               ),
@@ -172,7 +172,7 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
                   child: DropdownButton<String>(
                     isExpanded: true,
                     value: _selectedDoctor,
-                    hint: Text('Select a doctor', style: TextStyle(color: Colors.black)), // Add style here
+                    hint: const Text('Select a doctor', style: TextStyle(color: Colors.black)), // Add style here
                     onChanged: (newValue) {
                       setState(() {
                         _selectedDoctor = newValue;
@@ -181,16 +181,16 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
                     items: _doctors.map((doctor) {
                       return DropdownMenuItem<String>(
                         value: doctor,
-                        child: Text(doctor, style: TextStyle(color: Colors.black)), // Add style here as well
+                        child: Text(doctor, style: const TextStyle(color: Colors.black)), // Add style here as well
                       );
                     }).toList(),
                     dropdownColor: Colors.white,
-                    style: TextStyle(color: Colors.black), // Add this line to set the general text style
+                    style: const TextStyle(color: Colors.black), // Add this line to set the general text style
                   ),
                 ),
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Container(
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -200,26 +200,26 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
                     color: Colors.grey.withOpacity(0.3),
                     spreadRadius: 1,
                     blurRadius: 2,
-                    offset: Offset(0, 1),
+                    offset: const Offset(0, 1),
                   ),
                 ],
               ),
               child: InkWell(
                 onTap: () => _selectDate(context),
                 child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text('${_selectedDate.day}/${_selectedDate
                           .month}/${_selectedDate.year}'),
-                      Icon(Icons.calendar_today),
+                      const Icon(Icons.calendar_today),
                     ],
                   ),
                 ),
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Container(
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -229,25 +229,25 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
                     color: Colors.grey.withOpacity(0.3),
                     spreadRadius: 1,
                     blurRadius: 2,
-                    offset: Offset(0, 1),
+                    offset: const Offset(0, 1),
                   ),
                 ],
               ),
               child: InkWell(
                 onTap: () => _selectTime(context),
                 child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('${_selectedTime.format(context)}'),
-                      Icon(Icons.access_time),
+                      Text(_selectedTime.format(context)),
+                      const Icon(Icons.access_time),
                     ],
                   ),
                 ),
               ),
             ),
-            SizedBox(height: 16),Container(
+            const SizedBox(height: 16),Container(
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(8),
@@ -256,13 +256,13 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
                     color: Colors.grey.withOpacity(0.3),
                     spreadRadius: 1,
                     blurRadius: 2,
-                    offset: Offset(0, 1),
+                    offset: const Offset(0, 1),
                   ),
                 ],
               ),
               child: TextField(
                 controller: _reasonController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Reason for Appointment',
                   labelStyle: TextStyle(color: Colors.black), // Add this line
                   border: InputBorder.none,
@@ -271,19 +271,19 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
                 maxLines: 3,
               ),
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
       ElevatedButton(
         onPressed: _bookAppointment,
-        child: Text(
-          'Book Appointment',
-          style: TextStyle(color: Colors.black), // Add this line
-        ),
         style: ElevatedButton.styleFrom(
-          padding: EdgeInsets.symmetric(vertical: 16),
+          padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
           ),
           backgroundColor: Colors.white, // Add this line to make the button background white
+        ),
+        child: const Text(
+          'Book Appointment',
+          style: TextStyle(color: Colors.black), // Add this line
         ),
       ),
           ],

@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'splash_screen.dart';
 import 'themes.dart';
-import 'account_page.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   // Create a ValueNotifier to hold the current theme
   static final ValueNotifier<ThemeData> themeNotifier = ValueNotifier(pastelPinkTheme);
+
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +20,7 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
           title: 'One-Love',
           theme: theme,
-          home: SplashScreen(),
+          home: const SplashScreen(),
         );
       },
     );

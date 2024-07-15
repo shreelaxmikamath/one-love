@@ -6,7 +6,7 @@ import 'dart:convert';
 class CalendarPage extends StatefulWidget {
   final String userId;
 
-  CalendarPage({required this.userId});
+  const CalendarPage({super.key, required this.userId});
 
   @override
   _CalendarPageState createState() => _CalendarPageState();
@@ -14,7 +14,7 @@ class CalendarPage extends StatefulWidget {
 
 class _CalendarPageState extends State<CalendarPage> {
   late DateTime _selectedDate = DateTime.now();
-  late TextEditingController _noteController = TextEditingController();
+  late final TextEditingController _noteController = TextEditingController();
   late FocusNode _noteFocus;
   List<Map<String, dynamic>> _savedNotes = []; // List to store saved notes with IDs
 
@@ -44,7 +44,7 @@ class _CalendarPageState extends State<CalendarPage> {
   void _saveNote() async {
     var note = _noteController.text;
     if (note.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Please enter a note.")));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please enter a note.")));
       return;
     }
 
@@ -60,10 +60,10 @@ class _CalendarPageState extends State<CalendarPage> {
 
     if (response.statusCode == 200) {
       _fetchNotes(); // Refresh notes after saving a new one
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Note saved successfully!")));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Note saved successfully!")));
       _noteController.clear();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to save note!")));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Failed to save note!")));
     }
   }
 
@@ -79,9 +79,9 @@ class _CalendarPageState extends State<CalendarPage> {
 
     if (response.statusCode == 200) {
       _fetchNotes(); // Refresh notes after editing
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Note edited successfully!")));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Note edited successfully!")));
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to edit note!")));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Failed to edit note!")));
     }
   }
 
@@ -94,9 +94,9 @@ class _CalendarPageState extends State<CalendarPage> {
 
     if (response.statusCode == 200) {
       _fetchNotes(); // Refresh notes after deleting
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Note deleted successfully!")));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Note deleted successfully!")));
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to delete note!")));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Failed to delete note!")));
     }
   }
 
@@ -104,7 +104,7 @@ class _CalendarPageState extends State<CalendarPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Calendar'),
+        title: const Text('Calendar'),
       ),
       body: GestureDetector(
         onTap: () {
@@ -117,11 +117,11 @@ class _CalendarPageState extends State<CalendarPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildCalendar(),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 _buildNoteTextField(),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 _buildSaveButton(),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 _buildSavedNotes(),
               ],
             ),
@@ -152,7 +152,7 @@ class _CalendarPageState extends State<CalendarPage> {
     return TextField(
       focusNode: _noteFocus,
       controller: _noteController,
-      decoration: InputDecoration(
+      decoration: const InputDecoration(
         labelText: 'Add Note',
         border: OutlineInputBorder(),
       ),
@@ -165,7 +165,7 @@ class _CalendarPageState extends State<CalendarPage> {
       onPressed: () {
         _saveNote();
       },
-      child: Text('Save Note'),
+      child: const Text('Save Note'),
     );
   }
 
@@ -176,25 +176,25 @@ class _CalendarPageState extends State<CalendarPage> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Saved Note:',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(note['note']),
             Row(
               children: [
                 IconButton(
-                  icon: Icon(Icons.edit),
+                  icon: const Icon(Icons.edit),
                   onPressed: () {
                     _noteController.text = note['note'];
                     showDialog(
                       context: context,
                       builder: (context) => AlertDialog(
-                        title: Text('Edit Note'),
+                        title: const Text('Edit Note'),
                         content: TextField(
                           controller: _noteController,
-                          decoration: InputDecoration(
+                          decoration: const InputDecoration(
                             border: OutlineInputBorder(),
                           ),
                           maxLines: 3,
@@ -205,13 +205,13 @@ class _CalendarPageState extends State<CalendarPage> {
                               _editNote(note['id'], _noteController.text);
                               Navigator.of(context).pop();
                             },
-                            child: Text('Save'),
+                            child: const Text('Save'),
                           ),
                           TextButton(
                             onPressed: () {
                               Navigator.of(context).pop();
                             },
-                            child: Text('Cancel'),
+                            child: const Text('Cancel'),
                           ),
                         ],
                       ),
@@ -219,14 +219,14 @@ class _CalendarPageState extends State<CalendarPage> {
                   },
                 ),
                 IconButton(
-                  icon: Icon(Icons.delete),
+                  icon: const Icon(Icons.delete),
                   onPressed: () {
                     _deleteNote(note['id']);
                   },
                 ),
               ],
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
           ],
         );
       }).toList(),

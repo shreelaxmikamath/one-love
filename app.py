@@ -3,7 +3,8 @@ import mysql.connector
 from mysql.connector import Error
 import os
 import json
-
+import pandas as pd
+from flask_cors import CORS
 app = Flask(__name__)
 
 # Establish database connection
@@ -518,7 +519,7 @@ def delete_appointment():
     try:
         cursor = db.cursor()
         cursor.execute("""
-            DELETE FROM booked_appointments 
+            DELETE FROM booked_appointments
             WHERE user_id = %s AND appointment_date = %s AND appointment_time = %s
         """, (user_id, appointment_date, appointment_time))
         db.commit()
@@ -526,29 +527,52 @@ def delete_appointment():
         return jsonify({"message": "Appointment deleted successfully"}), 200
     except Exception as e:
         return jsonify({"error": f"Database error: {str(e)}"}), 500
-    
+
 @app.route('/update_appointment', methods=['PUT'])
 def update_appointment():
     data = request.get_json()
     user_id = data.get('user_id')
-    appointment_date = data.get('appointment_date')
-    appointment_time = data.get('appointment_time')
+    old_appointment_date = data.get('old_appointment_date')
+    old_appointment_time = data.get('old_appointment_time')
+    new_doctor_id = data.get('new_doctor_id')
     new_date = data.get('new_date')
     new_time = data.get('new_time')
 
     try:
         cursor = db.cursor()
         cursor.execute("""
-            UPDATE booked_appointments 
-            SET appointment_date = %s, appointment_time = %s
+            UPDATE booked_appointments
+            SET doctor_id = %s, appointment_date = %s, appointment_time = %s
             WHERE user_id = %s AND appointment_date = %s AND appointment_time = %s
-        """, (new_date, new_time, user_id, appointment_date, appointment_time))
+        """, (new_doctor_id, new_date, new_time, user_id, old_appointment_date, old_appointment_time))
         db.commit()
         cursor.close()
         return jsonify({"message": "Appointment updated successfully"}), 200
     except Exception as e:
         return jsonify({"error": f"Database error: {str(e)}"}), 500
 
+
+male_names = pd.read_csv('assets/boys_names.csv')
+female_names = pd.read_csv('assets/girls_names.csv')
+
+@app.route('/suggest_names', methods=['POST'])
+def suggest_names():
+    data = request.json
+    letter_position = data.get('letter_position')  # 'First' or 'Last'
+    letter = data.get('letter')
+    gender = data.get('gender')  # 'Male' or 'Female'
+
+    if gender == 'Male':
+        names = male_names['name'].dropna()  # Drop NaN values
+    else:
+        names = female_names['name'].dropna()  # Drop NaN values
+
+    if letter_position == 'First':
+        suggested_names = names[names.str.startswith(letter)].tolist()
+    else:
+        suggested_names = names[names.str.endswith(letter)].tolist()
+
+    return jsonify(suggested_names)
 
 
 if __name__ == '__main__':

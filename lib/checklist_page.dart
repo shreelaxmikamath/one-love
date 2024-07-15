@@ -3,10 +3,12 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -14,7 +16,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: ChecklistPage(userId: 1), // Replace with your user ID logic
+      home: const ChecklistPage(userId: 1), // Replace with your user ID logic
     );
   }
 }
@@ -22,7 +24,7 @@ class MyApp extends StatelessWidget {
 class ChecklistPage extends StatefulWidget {
   final int userId;
 
-  ChecklistPage({required this.userId});
+  const ChecklistPage({super.key, required this.userId});
 
   @override
   _ChecklistPageState createState() => _ChecklistPageState();
@@ -77,12 +79,12 @@ class _ChecklistPageState extends State<ChecklistPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Checklist'),
+        title: const Text('Checklist'),
       ),
       body: isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : categories.isEmpty
-          ? Center(child: Text('Empty'))
+          ? const Center(child: Text('Empty'))
           : ListView.builder(
         itemCount: categories.length,
         itemBuilder: (context, index) {
@@ -99,22 +101,22 @@ class _ChecklistPageState extends State<ChecklistPage> {
             builder: (BuildContext context) {
               String newCategoryName = '';
               return AlertDialog(
-                title: Text('Add New Category'),
+                title: const Text('Add New Category'),
                 content: TextField(
                   onChanged: (value) {
                     newCategoryName = value;
                   },
-                  decoration: InputDecoration(hintText: "Enter category name"),
+                  decoration: const InputDecoration(hintText: "Enter category name"),
                 ),
                 actions: <Widget>[
                   TextButton(
-                    child: Text('Cancel'),
+                    child: const Text('Cancel'),
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
                   ),
                   TextButton(
-                    child: Text('Add'),
+                    child: const Text('Add'),
                     onPressed: () {
                       if (newCategoryName.isNotEmpty) {
                         addCategory(newCategoryName);
@@ -127,7 +129,7 @@ class _ChecklistPageState extends State<ChecklistPage> {
             },
           );
         },
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -169,7 +171,7 @@ class CategoryTile extends StatefulWidget {
   final Category category;
   final VoidCallback onDelete;
 
-  CategoryTile({required this.category, required this.onDelete});
+  const CategoryTile({super.key, required this.category, required this.onDelete});
 
   @override
   _CategoryTileState createState() => _CategoryTileState();
@@ -240,7 +242,7 @@ class _CategoryTileState extends State<CategoryTile> {
     return Column(
       children: <Widget>[
         Card(
-          margin: EdgeInsets.all(8),
+          margin: const EdgeInsets.all(8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -250,33 +252,33 @@ class _CategoryTileState extends State<CategoryTile> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
-                      icon: _isExpanded ? Icon(Icons.visibility) : Icon(Icons.visibility_off),
+                      icon: _isExpanded ? const Icon(Icons.visibility) : const Icon(Icons.visibility_off),
                       onPressed: toggleExpansion,
                     ),
                     IconButton(
-                      icon: Icon(Icons.add),
+                      icon: const Icon(Icons.add),
                       onPressed: () {
                         showDialog(
                           context: context,
                           builder: (BuildContext context) {
                             String newItemName = '';
                             return AlertDialog(
-                              title: Text('Add New Item'),
+                              title: const Text('Add New Item'),
                               content: TextField(
                                 onChanged: (value) {
                                   newItemName = value;
                                 },
-                                decoration: InputDecoration(hintText: "Enter item name"),
+                                decoration: const InputDecoration(hintText: "Enter item name"),
                               ),
                               actions: <Widget>[
                                 TextButton(
-                                  child: Text('Cancel'),
+                                  child: const Text('Cancel'),
                                   onPressed: () {
                                     Navigator.of(context).pop();
                                   },
                                 ),
                                 TextButton(
-                                  child: Text('Add'),
+                                  child: const Text('Add'),
                                   onPressed: () {
                                     if (newItemName.isNotEmpty) {
                                       addItem(newItemName);
@@ -291,7 +293,7 @@ class _CategoryTileState extends State<CategoryTile> {
                       },
                     ),
                     IconButton(
-                      icon: Icon(Icons.delete),
+                      icon: const Icon(Icons.delete),
                       onPressed: widget.onDelete,
                     ),
                   ],
@@ -306,8 +308,8 @@ class _CategoryTileState extends State<CategoryTile> {
                 Column(
                   children: widget.category.items.isEmpty
                       ? [
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
+                    const Padding(
+                      padding: EdgeInsets.all(16.0),
                       child: Text('Empty'),
                     )
                   ]
@@ -324,7 +326,7 @@ class _CategoryTileState extends State<CategoryTile> {
                         },
                       ),
                       trailing: IconButton(
-                        icon: Icon(Icons.delete),
+                        icon: const Icon(Icons.delete),
                         onPressed: () => deleteItem(item.id),
                       ),
                     );

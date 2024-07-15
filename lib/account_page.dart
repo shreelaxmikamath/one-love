@@ -8,7 +8,7 @@ import 'themes.dart'; // Import themes
 class AccountPage extends StatefulWidget {
   final String userId;
 
-  AccountPage({required this.userId});
+  const AccountPage({super.key, required this.userId});
 
   @override
   _AccountPageState createState() => _AccountPageState();
@@ -85,7 +85,7 @@ class _AccountPageState extends State<AccountPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(fontWeight: FontWeight.bold)),
+          Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
           Text(value ?? 'N/A'),
         ],
       ),
@@ -126,7 +126,7 @@ class _AccountPageState extends State<AccountPage> {
 
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Profile updated successfully')),
+          const SnackBar(content: Text('Profile updated successfully')),
         );
         setState(() {
           _isEditing = false;
@@ -134,13 +134,13 @@ class _AccountPageState extends State<AccountPage> {
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update profile')),
+          const SnackBar(content: Text('Failed to update profile')),
         );
       }
     } catch (e) {
       print('Error saving profile: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred while saving')),
+        const SnackBar(content: Text('An error occurred while saving')),
       );
     }
   }
@@ -158,7 +158,7 @@ class _AccountPageState extends State<AccountPage> {
 
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Account deleted successfully')),
+          const SnackBar(content: Text('Account deleted successfully')),
         );
         Navigator.pushAndRemoveUntil(
           context,
@@ -174,7 +174,7 @@ class _AccountPageState extends State<AccountPage> {
           print('Failed to delete account: ${responseData['error']}');
         } catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to delete account: Unexpected response from server')),
+            const SnackBar(content: Text('Failed to delete account: Unexpected response from server')),
           );
           print('Failed to delete account: Unexpected response from server');
         }
@@ -182,7 +182,7 @@ class _AccountPageState extends State<AccountPage> {
     } catch (e) {
       print('Error deleting account: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred while deleting account')),
+        const SnackBar(content: Text('An error occurred while deleting account')),
       );
     }
   }
@@ -199,7 +199,7 @@ class _AccountPageState extends State<AccountPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Account'),
+        title: const Text('Account'),
         actions: [
           if (!_isLoading && _userInfo != null) ...[
             IconButton(
@@ -224,30 +224,30 @@ class _AccountPageState extends State<AccountPage> {
                 }
               },
               itemBuilder: (context) => [
-                PopupMenuItem(
+                const PopupMenuItem(
                   value: 'Logout',
                   child: Text('Logout'),
                 ),
-                PopupMenuItem(
+                const PopupMenuItem(
                   value: 'Delete Account',
                   child: Text('Delete Account'),
                 ),
-                PopupMenuItem(
+                const PopupMenuItem(
                   value: 'Change Theme',
                   child: Text('Change Theme'),
                 ),
               ],
-              icon: Icon(Icons.settings),
+              icon: const Icon(Icons.settings),
             ),
           ],
         ],
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : _userInfo == null
-          ? Center(child: Text('Failed to load user information'))
+          ? const Center(child: Text('Failed to load user information'))
           : SingleChildScrollView(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -262,10 +262,10 @@ class _AccountPageState extends State<AccountPage> {
               _buildEditableRow('Diet', _dietController),
               _buildEditableRow('Months', _monthsController),
               _buildEditableRow('Children', _childrenController),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _saveChanges,
-                child: Text('Save Changes'),
+                child: const Text('Save Changes'),
               ),
             ] else ...[
               _buildInfoRow('Full Name', _userInfo?['full_name']),
@@ -290,26 +290,26 @@ class _AccountPageState extends State<AccountPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Select Theme'),
+          title: const Text('Select Theme'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                title: Text('Pastel Pink Theme'),
+                title: const Text('Pastel Pink Theme'),
                 onTap: () {
                   MyApp.themeNotifier.value = pastelPinkTheme;
                   Navigator.of(context).pop();
                 },
               ),
               ListTile(
-                title: Text('Pastel Blue Theme'),
+                title: const Text('Pastel Blue Theme'),
                 onTap: () {
                   MyApp.themeNotifier.value = pastelBlueTheme;
                   Navigator.of(context).pop();
                 },
               ),
               ListTile(
-                title: Text('Pastel Green Theme'),
+                title: const Text('Pastel Green Theme'),
                 onTap: () {
                   MyApp.themeNotifier.value = pastelGreenTheme;
                   Navigator.of(context).pop();

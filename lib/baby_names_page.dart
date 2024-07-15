@@ -3,6 +3,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class BabyNamesPage extends StatefulWidget {
+  const BabyNamesPage({super.key});
+
   @override
   _BabyNamesPageState createState() => _BabyNamesPageState();
 }
@@ -22,12 +24,12 @@ class _BabyNamesPageState extends State<BabyNamesPage> {
         builder: (context) {
           String userInput = '';
           return AlertDialog(
-            title: Text('Enter Letter'),
+            title: const Text('Enter Letter'),
             content: TextField(
               onChanged: (value) {
                 userInput = value;
               },
-              decoration: InputDecoration(hintText: 'Enter a letter'),
+              decoration: const InputDecoration(hintText: 'Enter a letter'),
             ),
             actions: [
               TextButton(
@@ -36,7 +38,7 @@ class _BabyNamesPageState extends State<BabyNamesPage> {
                   Navigator.of(context).pop();
                   _fetchSuggestedNames(letter);
                 },
-                child: Text('Submit'),
+                child: const Text('Submit'),
               ),
             ],
           );
@@ -69,18 +71,18 @@ class _BabyNamesPageState extends State<BabyNamesPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Baby Names Suggestion'),
+        title: const Text('Baby Names Suggestion'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             DropdownButton<String>(
-              hint: Text('Select Letter Position'),
+              hint: const Text('Select Letter Position'),
               value: selectedLetter,
-              items: [
-                DropdownMenuItem(child: Text('First Letter'), value: 'First'),
-                DropdownMenuItem(child: Text('Last Letter'), value: 'Last'),
+              items: const [
+                DropdownMenuItem(value: 'First', child: Text('First Letter')),
+                DropdownMenuItem(value: 'Last', child: Text('Last Letter')),
               ],
               onChanged: (value) {
                 setState(() {
@@ -89,11 +91,11 @@ class _BabyNamesPageState extends State<BabyNamesPage> {
               },
             ),
             DropdownButton<String>(
-              hint: Text('Select Gender'),
+              hint: const Text('Select Gender'),
               value: selectedGender,
-              items: [
-                DropdownMenuItem(child: Text('Male'), value: 'Male'),
-                DropdownMenuItem(child: Text('Female'), value: 'Female'),
+              items: const [
+                DropdownMenuItem(value: 'Male', child: Text('Male')),
+                DropdownMenuItem(value: 'Female', child: Text('Female')),
               ],
               onChanged: (value) {
                 setState(() {
@@ -103,10 +105,10 @@ class _BabyNamesPageState extends State<BabyNamesPage> {
             ),
             ElevatedButton(
               onPressed: _suggestNames,
-              child: Text('Suggest Names'),
+              child: const Text('Suggest Names'),
             ),
-            SizedBox(height: 20),
-            Text('Suggested Names:', style: TextStyle(fontSize: 18)),
+            const SizedBox(height: 20),
+            const Text('Suggested Names:', style: TextStyle(fontSize: 18)),
             Expanded(
               child: ListView.builder(
                 itemCount: suggestedNames.length,

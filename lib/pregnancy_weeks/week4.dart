@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 
 class Week4Page extends StatelessWidget {
+  const Week4Page({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Week 4'),
+        title: const Text('Week 4'),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+      body: const SingleChildScrollView(
+        padding: EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

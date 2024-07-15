@@ -5,13 +5,13 @@ import 'appointments_list_page.dart';
 
 class InsightsPage extends StatelessWidget {
   final String userId;
-  InsightsPage({required this.userId});
+  const InsightsPage({super.key, required this.userId});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Insights'),
+        title: const Text('Insights'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -27,7 +27,7 @@ class InsightsPage extends StatelessWidget {
                     );
                   }),
                 ),
-                SizedBox(width: 16),
+                const SizedBox(width: 16),
                 Expanded(
                   child: _buildCard(' My Appointments', () {
                     Navigator.push(
@@ -38,7 +38,7 @@ class InsightsPage extends StatelessWidget {
                 ),
               ],
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
@@ -49,7 +49,7 @@ class InsightsPage extends StatelessWidget {
                     );
                   }),
                 ),
-                Expanded(child: SizedBox()), // This creates an empty space to balance the row
+                const Expanded(child: SizedBox()), // This creates an empty space to balance the row
               ],
             ),
           ],
@@ -62,7 +62,7 @@ class InsightsPage extends StatelessWidget {
     return Card(
       elevation: 4,
       child: ListTile(
-        contentPadding: EdgeInsets.all(16.0),
+        contentPadding: const EdgeInsets.all(16.0),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10.0),
         ),

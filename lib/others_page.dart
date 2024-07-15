@@ -4,12 +4,12 @@ import 'checklist_page.dart';
 class OthersPage extends StatelessWidget {
   final int userId;
 
-  OthersPage({required this.userId});
+  const OthersPage({super.key, required this.userId});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Others Page')),
+      appBar: AppBar(title: const Text('Others Page')),
       body: Center(
         child: ElevatedButton(
           onPressed: () {
@@ -21,7 +21,7 @@ class OthersPage extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.white, // Set button background to white
           ),
-          child: Text(
+          child: const Text(
             'Go to Checklist Page',
             style: TextStyle(color: Colors.black), // Set text color to black
           ),

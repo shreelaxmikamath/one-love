@@ -18,7 +18,7 @@ class ProfilePromptScreen extends StatelessWidget {
   final TextEditingController monthsController = TextEditingController();
   final TextEditingController childrenController = TextEditingController();
 
-  ProfilePromptScreen({
+  ProfilePromptScreen({super.key, 
     required this.userId,
     required this.fullName,
     required this.username,
@@ -29,7 +29,7 @@ class ProfilePromptScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Profile Information')),
+      appBar: AppBar(title: const Text('Profile Information')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
@@ -37,30 +37,30 @@ class ProfilePromptScreen extends StatelessWidget {
             children: <Widget>[
               TextField(
                 controller: ageController,
-                decoration: InputDecoration(labelText: 'Age'),
+                decoration: const InputDecoration(labelText: 'Age'),
               ),
 
               TextField(
                 controller: weightController,
-                decoration: InputDecoration(labelText: 'Weight'),
+                decoration: const InputDecoration(labelText: 'Weight'),
               ),
               TextField(
                 controller: heightController,
-                decoration: InputDecoration(labelText: 'Height'),
+                decoration: const InputDecoration(labelText: 'Height'),
               ),
               TextField(
                 controller: dietController,
-                decoration: InputDecoration(labelText: 'Diet (Vegetarian/Non-Vegetarian)'),
+                decoration: const InputDecoration(labelText: 'Diet (Vegetarian/Non-Vegetarian)'),
               ),
               TextField(
                 controller: monthsController,
-                decoration: InputDecoration(labelText: 'How many months?'),
+                decoration: const InputDecoration(labelText: 'How many months?'),
               ),
               TextField(
                 controller: childrenController,
-                decoration: InputDecoration(labelText: 'Number of children'),
+                decoration: const InputDecoration(labelText: 'Number of children'),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () async {
                   if (ageController.text.isEmpty ||
@@ -71,7 +71,7 @@ class ProfilePromptScreen extends StatelessWidget {
                       childrenController.text.isEmpty) {
                     // Show an error message if any field is empty
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Please fill in all fields')),
+                      const SnackBar(content: Text('Please fill in all fields')),
                     );
                     return;
                   }
@@ -108,7 +108,7 @@ class ProfilePromptScreen extends StatelessWidget {
                     print("Failed to save profile information!");
                   }
                 },
-                child: Text('Submit'),
+                child: const Text('Submit'),
               ),
             ],
           ),

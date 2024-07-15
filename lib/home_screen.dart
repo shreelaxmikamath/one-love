@@ -22,7 +22,7 @@ import 'baby_names_page.dart';
 class HomeScreen extends StatefulWidget {
   final String userId;
 
-  HomeScreen({required this.userId});
+  const HomeScreen({super.key, required this.userId});
 
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -33,7 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late String _email = '';
   late String _contactNumber = '';
   int _selectedIndex = 0;
-  DateTime _now = DateTime.now();
+  final DateTime _now = DateTime.now();
   int _currentImageIndex = 0;
   late Timer _timer;
 
@@ -51,7 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _startImageSlideshow() {
-    _timer = Timer.periodic(Duration(seconds: 3), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
       setState(() {
         _currentImageIndex = (_currentImageIndex + 1) % _imageAssets.length;
       });
@@ -126,7 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
             bool isToday = date.day == _now.day && date.month == _now.month && date.year == _now.year;
 
             return Container(
-              padding: EdgeInsets.all(8),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: isToday ? Colors.blue : Colors.transparent,
                 borderRadius: BorderRadius.circular(10),
@@ -154,7 +154,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => Week3Page(),
+                builder: (context) => const Week3Page(),
               ),
             );
           }
@@ -163,7 +163,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => Week4Page(),
+                builder: (context) => const Week4Page(),
               ),
             );
           }
@@ -171,7 +171,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => Week5Page(),
+                builder: (context) => const Week5Page(),
               ),
             );
           }
@@ -179,7 +179,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => Week6Page(),
+                builder: (context) => const Week6Page(),
               ),
             );
           }
@@ -187,7 +187,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => Week7Page(),
+                builder: (context) => const Week7Page(),
               ),
             );
           }
@@ -195,28 +195,28 @@ class _HomeScreenState extends State<HomeScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => Week7Page(),
+                builder: (context) => const Week7Page(),
               ),
             );
           }if (weekNumber == 8) {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => Week8Page(),
+                builder: (context) => const Week8Page(),
               ),
             );
           }if (weekNumber == 9) {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => Week9Page(),
+                builder: (context) => const Week9Page(),
               ),
             );
           }if (weekNumber == 10) {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => Week10Page(),
+                builder: (context) => const Week10Page(),
               ),
             );
           }
@@ -224,7 +224,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Container(
           width: 40,
           height: 40,
-          margin: EdgeInsets.all(4),
+          margin: const EdgeInsets.all(4),
           decoration: BoxDecoration(
             color: Colors.lightBlueAccent,
             borderRadius: BorderRadius.circular(8),
@@ -232,7 +232,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Center(
             child: Text(
               '$weekNumber',
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
               ),
@@ -252,14 +252,14 @@ class _HomeScreenState extends State<HomeScreen> {
     List<String> tools = ["Tool 1", "Baby Names", "Tool 3"]; // Replace with actual tool names
     return Column(
       children: [
-        Text(
+        const Text(
           'Popular Tools',
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
           ),
         ),
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: tools.map((tool) {
@@ -268,7 +268,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 if (tool == "Baby Names") {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => BabyNamesPage()),
+                    MaterialPageRoute(builder: (context) => const BabyNamesPage()),
                   );
                 }
               },
@@ -282,7 +282,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Center(
                   child: Text(
                     tool,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
                     ),
@@ -298,7 +298,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildImageSlideshow() {
-    return Container(
+    return SizedBox(
       height: 200, // Set the height for the image container
       child: Image.asset(
         _imageAssets[_currentImageIndex],
@@ -312,10 +312,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('One Love'),
+        title: const Text('One Love'),
         actions: <Widget>[
           IconButton(
-            icon: Icon(Icons.calendar_today),
+            icon: const Icon(Icons.calendar_today),
             onPressed: () {
               Navigator.push(
                 context,
@@ -324,7 +324,7 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
           IconButton(
-            icon: Icon(Icons.notifications),
+            icon: const Icon(Icons.notifications),
             onPressed: () {
               Navigator.push(
                 context,
@@ -333,7 +333,7 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
           IconButton(
-            icon: Icon(Icons.account_circle),
+            icon: const Icon(Icons.account_circle),
             onPressed: () {
               Navigator.push(
                 context,
@@ -349,11 +349,11 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             children: [
               _buildImageSlideshow(),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               _buildWeeklyCalendar(),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               _buildPopularTools(),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               _buildPregnancyWeekBoxes(),
             ],
           ),

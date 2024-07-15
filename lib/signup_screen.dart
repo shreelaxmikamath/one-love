@@ -13,10 +13,12 @@ class SignupScreen extends StatelessWidget {
   String initialCountry = 'IN'; // Initial selected country code
   PhoneNumber number = PhoneNumber(isoCode: 'IN');
 
+  SignupScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Sign Up')),
+      appBar: AppBar(title: const Text('Sign Up')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -24,45 +26,45 @@ class SignupScreen extends StatelessWidget {
           children: <Widget>[
             TextField(
               controller: usernameController,
-              decoration: InputDecoration(labelText: 'Username'),
+              decoration: const InputDecoration(labelText: 'Username'),
             ),
-            SizedBox(height: 12), // Added space
+            const SizedBox(height: 12), // Added space
             TextField(
               controller: fullNameController,
-              decoration: InputDecoration(labelText: 'Full Name'),
+              decoration: const InputDecoration(labelText: 'Full Name'),
             ),
-            SizedBox(height: 12), // Added space
+            const SizedBox(height: 12), // Added space
             TextField(
               controller: emailController,
-              decoration: InputDecoration(labelText: 'Email'),
+              decoration: const InputDecoration(labelText: 'Email'),
             ),
-            SizedBox(height: 12), // Added space
+            const SizedBox(height: 12), // Added space
             TextField(
               controller: passwordController,
-              decoration: InputDecoration(labelText: 'Password'),
+              decoration: const InputDecoration(labelText: 'Password'),
               obscureText: true,
             ),
-            SizedBox(height: 12), // Added space
+            const SizedBox(height: 12), // Added space
             InternationalPhoneNumberInput(
               onInputChanged: (PhoneNumber number) {
                 print(number.phoneNumber);
               },
-              selectorConfig: SelectorConfig(
+              selectorConfig: const SelectorConfig(
                 selectorType: PhoneInputSelectorType.BOTTOM_SHEET,
               ),
               ignoreBlank: false,
               autoValidateMode: AutovalidateMode.disabled,
-              selectorTextStyle: TextStyle(color: Colors.black),
+              selectorTextStyle: const TextStyle(color: Colors.black),
               initialValue: number,
               textFieldController: contactNumberController,
-              inputDecoration: InputDecoration(
+              inputDecoration: const InputDecoration(
                 labelText: 'Contact Number',
                 border: OutlineInputBorder(),
               ),
               formatInput: false, // Disable auto-formatting
               maxLength: 10, // Limit to 10 digits
             ),
-            SizedBox(height: 20), // Larger space before the button
+            const SizedBox(height: 20), // Larger space before the button
             ElevatedButton(
               onPressed: () async {
                 // Validate input fields
@@ -73,7 +75,7 @@ class SignupScreen extends StatelessWidget {
                     contactNumberController.text.isEmpty ||
                     !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(emailController.text) ||
                     !RegExp(r'^[0-9]{10}$').hasMatch(contactNumberController.text)) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                     content: Text("Please fill in all fields correctly."),
                   ));
                   return; // Exit function if any field is empty or format is incorrect
@@ -119,16 +121,16 @@ class SignupScreen extends StatelessWidget {
                     ),
                   );
                 } else if (response.statusCode == 409) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                     content: Text("Username already exists. Please choose a different username."),
                   ));
                 } else {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                     content: Text("Signup failed. Please try again later."),
                   ));
                 }
               },
-              child: Text('Sign Up'),
+              child: const Text('Sign Up'),
             ),
           ],
         ),

@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 class PrescriptionsPage extends StatefulWidget {
   final String userId;
 
-  PrescriptionsPage({required this.userId});
+  const PrescriptionsPage({super.key, required this.userId});
 
   @override
   _PrescriptionsPageState createState() => _PrescriptionsPageState();
@@ -38,17 +38,17 @@ class _PrescriptionsPageState extends State<PrescriptionsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('View Prescriptions'),
+        title: const Text('View Prescriptions'),
       ),
       body: prescriptions.isEmpty
-          ? Center(
+          ? const Center(
         child: CircularProgressIndicator(), // Show loading indicator while fetching
       )
           : ListView.builder(
         itemCount: prescriptions.length,
         itemBuilder: (context, index) {
           return Card(
-            margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+            margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -56,22 +56,22 @@ class _PrescriptionsPageState extends State<PrescriptionsPage> {
                 children: [
                   Text(
                     'Doctor: ${prescriptions[index]['doctor_name'] ?? 'No Doctor Name'}',
-                    style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+                    style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
                   ),
-                  SizedBox(height: 8.0),
+                  const SizedBox(height: 8.0),
                   Text(
                     'Diagnosis: ${prescriptions[index]['diagnosis'] ?? 'No Diagnosis'}',
-                    style: TextStyle(fontSize: 14.0),
+                    style: const TextStyle(fontSize: 14.0),
                   ),
-                  SizedBox(height: 8.0),
+                  const SizedBox(height: 8.0),
                   Text(
                     'Medications: ${prescriptions[index]['medications'] ?? 'No Medications'}',
-                    style: TextStyle(fontSize: 14.0),
+                    style: const TextStyle(fontSize: 14.0),
                   ),
-                  SizedBox(height: 8.0),
+                  const SizedBox(height: 8.0),
                   Text(
                     'Instructions: ${prescriptions[index]['instructions'] ?? 'No Instructions'}',
-                    style: TextStyle(fontSize: 14.0),
+                    style: const TextStyle(fontSize: 14.0),
                   ),
                 ],
               ),

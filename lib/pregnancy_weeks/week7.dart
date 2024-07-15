@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 
 class Week7Page extends StatelessWidget {
+  const Week7Page({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Week 7 of Pregnancy'),
+        title: const Text('Week 7 of Pregnancy'),
       ),
-      body: SingleChildScrollView(
+      body: const SingleChildScrollView(
         padding: EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

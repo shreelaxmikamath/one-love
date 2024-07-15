@@ -5,7 +5,7 @@ import 'dart:convert';
 class TodoListPage extends StatefulWidget {
   final String userId;
 
-  TodoListPage({Key? key, required this.userId}) : super(key: key);
+  const TodoListPage({Key? key, required this.userId}) : super(key: key);
 
   @override
   _TodoListPageState createState() => _TodoListPageState();
@@ -33,7 +33,7 @@ class _TodoListPageState extends State<TodoListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Todo List'),
+        title: const Text('Todo List'),
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

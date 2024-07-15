@@ -5,7 +5,7 @@ import 'dart:convert';
 class NotificationsPage extends StatefulWidget {
   final String userId;
 
-  NotificationsPage({required this.userId});
+  const NotificationsPage({super.key, required this.userId});
 
   @override
   _NotificationsPageState createState() => _NotificationsPageState();
@@ -39,7 +39,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
     } catch (e) {
       print('Error fetching notifications: $e');
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Failed to load notifications!")));
+          .showSnackBar(const SnackBar(content: Text("Failed to load notifications!")));
       setState(() {
         _isLoading = false;
       });
@@ -50,23 +50,23 @@ class _NotificationsPageState extends State<NotificationsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Today\'s Notifications'),
+        title: const Text('Today\'s Notifications'),
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : _notifications.isEmpty
-          ? Center(child: Text('No notifications for today'))
+          ? const Center(child: Text('No notifications for today'))
           : ListView.builder(
         itemCount: _notifications.length,
         itemBuilder: (context, index) {
           return Card(
-            margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             elevation: 3,
             child: Padding(
-              padding: EdgeInsets.all(10),
+              padding: const EdgeInsets.all(10),
               child: Text(
                 _notifications[index],
-                style: TextStyle(fontSize: 16),
+                style: const TextStyle(fontSize: 16),
               ),
             ),
           );
