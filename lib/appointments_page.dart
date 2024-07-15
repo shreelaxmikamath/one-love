@@ -155,7 +155,7 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
           children: [
             Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Colors.pink[50],
                 borderRadius: BorderRadius.circular(8),
                 boxShadow: [
                   BoxShadow(
@@ -193,7 +193,7 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
             const SizedBox(height: 16),
             Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Colors.pink[50],
                 borderRadius: BorderRadius.circular(8),
                 boxShadow: [
                   BoxShadow(
@@ -222,7 +222,7 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
             const SizedBox(height: 16),
             Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Colors.pink[50],
                 borderRadius: BorderRadius.circular(8),
                 boxShadow: [
                   BoxShadow(
@@ -249,7 +249,7 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
             ),
             const SizedBox(height: 16),Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Colors.pink[50],
                 borderRadius: BorderRadius.circular(8),
                 boxShadow: [
                   BoxShadow(
@@ -279,7 +279,7 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
           ),
-          backgroundColor: Colors.white, // Add this line to make the button background white
+          backgroundColor: Colors.pink[50], // Add this line to make the button background white
         ),
         child: const Text(
           'Book Appointment',
