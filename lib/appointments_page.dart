@@ -1,52 +1,65 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:intl/intl.dart';
 
 class AppointmentsPage extends StatefulWidget {
   final String userId;
+  final bool isEditing;
+  final Map<String, dynamic>? appointment;
 
-  const AppointmentsPage({super.key, required this.userId});
+  const AppointmentsPage({
+    Key? key,
+    required this.userId,
+    this.isEditing = false,
+    this.appointment,
+  }) : super(key: key);
 
   @override
   _AppointmentsPageState createState() => _AppointmentsPageState();
 }
 
 class _AppointmentsPageState extends State<AppointmentsPage> {
-  List<String> _doctors = [];
+  final _formKey = GlobalKey<FormState>();
   String? _selectedDoctor;
-  DateTime _selectedDate = DateTime.now();
-  TimeOfDay _selectedTime = TimeOfDay.now();
-  final TextEditingController _reasonController = TextEditingController();
+  DateTime? _selectedDate;
+  TimeOfDay? _selectedTime;
+  final _reasonController = TextEditingController();
+  List<Map<String, dynamic>> _doctors = [];
 
   @override
   void initState() {
     super.initState();
     _fetchDoctors();
+    if (widget.isEditing && widget.appointment != null) {
+      _selectedDoctor = widget.appointment!['doctor_id']?.toString();
+      _selectedDate = DateTime.parse(widget.appointment!['appointment_date']);
+
+      List<String> timeParts = widget.appointment!['appointment_time'].split(':');
+      _selectedTime = TimeOfDay(
+          hour: int.parse(timeParts[0]),
+          minute: int.parse(timeParts[1])
+      );
+
+      _reasonController.text = widget.appointment!['reason'];
+    }
   }
 
   Future<void> _fetchDoctors() async {
     try {
-      final response = await http.get(
-          Uri.parse('http://10.0.2.2:5000/doctors'));
-
+      final response = await http.get(Uri.parse('http://10.0.2.2:5000/doctors'));
       if (response.statusCode == 200) {
         List<dynamic> doctorsData = json.decode(response.body);
-
         setState(() {
-          _doctors = doctorsData
-              .map<String>((doctor) => doctor['name'].toString())
-              .toList();
+          _doctors = List<Map<String, dynamic>>.from(doctorsData);
         });
       } else {
-        throw Exception('Failed to fetch data');
+        throw Exception('Failed to fetch doctors');
       }
     } catch (e) {
       print('Error fetching doctors: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to load doctors. Please try again.'),
-          duration: Duration(seconds: 2),
-        ),
+        const SnackBar(content: Text('Failed to load doctors. Please try again.')),
       );
     }
   }
@@ -54,9 +67,9 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: _selectedDate,
+      initialDate: _selectedDate ?? DateTime.now(),
       firstDate: DateTime.now(),
-      lastDate: DateTime(2100),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
     );
     if (picked != null && picked != _selectedDate) {
       setState(() {
@@ -68,7 +81,7 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
   Future<void> _selectTime(BuildContext context) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
-      initialTime: _selectedTime,
+      initialTime: _selectedTime ?? TimeOfDay.now(),
     );
     if (picked != null && picked != _selectedTime) {
       setState(() {
@@ -77,68 +90,56 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
     }
   }
 
-  Future<void> _bookAppointment() async {
-    if (_selectedDoctor == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a doctor'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-      return;
-    }
+  Future<void> _submitAppointment() async {
+    if (_formKey.currentState!.validate() && _selectedDoctor != null && _selectedDate != null && _selectedTime != null) {
+      final baseUrl = 'http://10.0.2.2:5000/appointments';
+      final url = widget.isEditing
+          ? Uri.parse('$baseUrl/${widget.appointment!['id']}')
+          : Uri.parse(baseUrl);
 
-    String reason = _reasonController.text.trim();
-    DateTime selectedDateTime = DateTime(
-      _selectedDate.year,
-      _selectedDate.month,
-      _selectedDate.day,
-      _selectedTime.hour,
-      _selectedTime.minute,
-    );
+      final appointmentData = {
+        'user_id': widget.userId,
+        'doctor_id': _selectedDoctor,
+        'appointment_date': DateFormat('yyyy-MM-dd').format(_selectedDate!),
+        'appointment_time': '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}',
+        'reason': _reasonController.text,
+      };
 
-    Map<String, dynamic> appointmentData = {
-      'user_id': widget.userId,
-      'doctor_name': _selectedDoctor,
-      'appointment_date': selectedDateTime.toIso8601String(),
-      'appointment_time': '${_selectedTime.hour}:${_selectedTime.minute}',
-      'reason': reason,
-    };
-
-    try {
-      final response = await http.post(
-        Uri.parse('http://10.0.2.2:5000/book_appointment'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(appointmentData),
-      );
-
-      if (response.statusCode == 201) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Appointment booked successfully!'),
-            duration: Duration(seconds: 2),
-          ),
+      try {
+        final response = widget.isEditing
+            ? await http.put(
+          url,
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode(appointmentData),
+        )
+            : await http.post(
+          url,
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode(appointmentData),
         );
-        Navigator.of(context).pop();
-      } else {
-        print('Book appointment failed: ${response.body}');
+
+        print('Server response status code: ${response.statusCode}');
+        print('Server response body: ${response.body}');
+
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          Navigator.pop(context, true);
+        } else {
+          String errorMessage;
+          try {
+            errorMessage = json.decode(response.body)['error'] ?? 'Unknown error occurred';
+          } catch (e) {
+            errorMessage = 'Failed to parse server response: ${response.body}';
+          }
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to ${widget.isEditing ? 'update' : 'save'} appointment: $errorMessage')),
+          );
+        }
+      } catch (e) {
+        print('Exception caught: $e');
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to book appointment. Please try again.'),
-            duration: Duration(seconds: 2),
-          ),
+          SnackBar(content: Text('Network error: $e')),
         );
       }
-    } catch (e) {
-      print('Error booking appointment: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Error booking appointment. Please try again.'),
-          duration: Duration(seconds: 2),
-        ),
-      );
     }
   }
 
@@ -146,149 +147,70 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Book Appointment'),
+        title: Text(widget.isEditing ? 'Edit Appointment' : 'New Appointment'),
       ),
-      body: SingleChildScrollView(
+      body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.pink[50],
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.3),
-                    spreadRadius: 1,
-                    blurRadius: 2,
-                    offset: const Offset(0, 1),
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            children: [
+              DropdownButtonFormField<String>(
+                value: _selectedDoctor,
+                items: [
+                  DropdownMenuItem<String>(
+                    value: null,
+                    child: Text('Select a doctor'),
                   ),
+                  ..._doctors.map((doctor) {
+                    return DropdownMenuItem<String>(
+                      value: doctor['id'].toString(),
+                      child: Text(doctor['name']),
+                    );
+                  }).toList(),
                 ],
+                onChanged: (value) {
+                  setState(() {
+                    _selectedDoctor = value;
+                  });
+                },
+                validator: (value) => value == null ? 'Please select a doctor' : null,
               ),
-              child: DropdownButtonHideUnderline(
-                child: ButtonTheme(
-                  alignedDropdown: true,
-                  child: DropdownButton<String>(
-                    isExpanded: true,
-                    value: _selectedDoctor,
-                    hint: const Text('Select a doctor', style: TextStyle(color: Colors.black)), // Add style here
-                    onChanged: (newValue) {
-                      setState(() {
-                        _selectedDoctor = newValue;
-                      });
-                    },
-                    items: _doctors.map((doctor) {
-                      return DropdownMenuItem<String>(
-                        value: doctor,
-                        child: Text(doctor, style: const TextStyle(color: Colors.black)), // Add style here as well
-                      );
-                    }).toList(),
-                    dropdownColor: Colors.white,
-                    style: const TextStyle(color: Colors.black), // Add this line to set the general text style
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.pink[50],
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.3),
-                    spreadRadius: 1,
-                    blurRadius: 2,
-                    offset: const Offset(0, 1),
-                  ),
-                ],
-              ),
-              child: InkWell(
+              ListTile(
+                title: Text(_selectedDate == null ? 'Select Date' : DateFormat('yyyy-MM-dd').format(_selectedDate!)),
+                trailing: const Icon(Icons.calendar_today),
                 onTap: () => _selectDate(context),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('${_selectedDate.day}/${_selectedDate
-                          .month}/${_selectedDate.year}'),
-                      const Icon(Icons.calendar_today),
-                    ],
-                  ),
-                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.pink[50],
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.3),
-                    spreadRadius: 1,
-                    blurRadius: 2,
-                    offset: const Offset(0, 1),
-                  ),
-                ],
-              ),
-              child: InkWell(
+              ListTile(
+                title: Text(_selectedTime == null ? 'Select Time' : _selectedTime!.format(context)),
+                trailing: const Icon(Icons.access_time),
                 onTap: () => _selectTime(context),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(_selectedTime.format(context)),
-                      const Icon(Icons.access_time),
-                    ],
-                  ),
-                ),
               ),
-            ),
-            const SizedBox(height: 16),Container(
-              decoration: BoxDecoration(
-                color: Colors.pink[50],
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.3),
-                    spreadRadius: 1,
-                    blurRadius: 2,
-                    offset: const Offset(0, 1),
-                  ),
-                ],
-              ),
-              child: TextField(
+              TextFormField(
                 controller: _reasonController,
-                decoration: const InputDecoration(
-                  labelText: 'Reason for Appointment',
-                  labelStyle: TextStyle(color: Colors.black), // Add this line
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.all(16),
-                ),
-                maxLines: 3,
+                decoration: const InputDecoration(labelText: 'Reason for Appointment'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter the reason for the appointment';
+                  }
+                  return null;
+                },
               ),
-            ),
-            const SizedBox(height: 24),
-      ElevatedButton(
-        onPressed: _bookAppointment,
-        style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _submitAppointment,
+                child: Text(widget.isEditing ? 'Update Appointment' : 'Create Appointment'),
+              ),
+            ],
           ),
-          backgroundColor: Colors.pink[50], // Add this line to make the button background white
-        ),
-        child: const Text(
-          'Book Appointment',
-          style: TextStyle(color: Colors.black), // Add this line
-        ),
-      ),
-          ],
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _reasonController.dispose();
+    super.dispose();
   }
 }

@@ -5,6 +5,8 @@ import os
 import json
 import pandas as pd
 from flask_cors import CORS
+from datetime import datetime, timedelta
+
 app = Flask(__name__)
 
 # Establish database connection
@@ -406,7 +408,83 @@ def delete_account():
     finally:
         cursor.close()
 
-#doctorsappointment
+@app.route('/appointments/<int:user_id>', methods=['GET'])
+def get_appointments(user_id):
+    try:
+        cursor = db.cursor(dictionary=True)
+        query = """
+        SELECT ba.id, ba.appointment_date, ba.appointment_time, ba.reason, d.name as doctor_name
+        FROM booked_appointments ba
+        JOIN doctors d ON ba.doctor_id = d.id
+        WHERE ba.user_id = %s
+        ORDER BY ba.appointment_date, ba.appointment_time
+        """
+        cursor.execute(query, (user_id,))
+        appointments = cursor.fetchall()
+
+        # Convert date and time to string for JSON serialization
+        for appointment in appointments:
+            appointment['appointment_date'] = appointment['appointment_date'].strftime('%Y-%m-%d')
+
+            # Handle timedelta object for appointment_time
+            if isinstance(appointment['appointment_time'], timedelta):
+                total_seconds = int(appointment['appointment_time'].total_seconds())
+                hours, remainder = divmod(total_seconds, 3600)
+                minutes, seconds = divmod(remainder, 60)
+                appointment['appointment_time'] = f'{hours:02d}:{minutes:02d}:{seconds:02d}'
+            else:
+                appointment['appointment_time'] = appointment['appointment_time'].strftime('%H:%M:%S')
+
+        return jsonify(appointments), 200
+    except Error as e:
+        return handle_db_error(f"Database error: {str(e)}")
+    finally:
+        cursor.close()
+
+@app.route('/appointments/<int:appointment_id>', methods=['DELETE'])
+def delete_appointment(appointment_id):
+    try:
+        cursor = db.cursor()
+        query = "DELETE FROM booked_appointments WHERE id = %s"
+        cursor.execute(query, (appointment_id,))
+        db.commit()
+
+        if cursor.rowcount == 0:
+            return jsonify({"error": "Appointment not found"}), 404
+
+        return jsonify({"message": "Appointment deleted successfully"}), 200
+    except Error as e:
+        db.rollback()
+        return handle_db_error(f"Database error: {str(e)}")
+    finally:
+        cursor.close()
+
+@app.route('/appointments/<int:appointment_id>', methods=['PUT'])
+def update_appointment(appointment_id):
+    data = request.json
+    try:
+        cursor = db.cursor()
+        query = """
+        UPDATE booked_appointments
+        SET doctor_id = %s, appointment_date = %s, appointment_time = %s, reason = %s
+        WHERE id = %s
+        """
+        values = (
+            data['doctor_id'],
+            data['appointment_date'],
+            data['appointment_time'],
+            data['reason'],
+            appointment_id
+        )
+        cursor.execute(query, values)
+        db.commit()
+        return jsonify({"message": "Appointment updated successfully"}), 200
+    except Error as e:
+        db.rollback()
+        return handle_db_error(f"Database error: {str(e)}")
+    finally:
+        cursor.close()
+
 @app.route('/doctors', methods=['GET'])
 def get_doctors():
     try:
@@ -414,143 +492,64 @@ def get_doctors():
         query = "SELECT id, name FROM doctors"
         cursor.execute(query)
         doctors = cursor.fetchall()
-        cursor.close()
         return jsonify(doctors), 200
     except Error as e:
         return handle_db_error(f"Database error: {str(e)}")
+    finally:
+        cursor.close()
 
-
-# Flask endpoint to book an appointment
-@app.route('/book_appointment', methods=['POST'])
+@app.route('/appointments', methods=['POST'])
 def book_appointment():
     data = request.json
-
+    conn = None
+    cursor = None
     try:
-        cursor = db.cursor()
-
-        # Fetch doctor_id based on doctor_name
-        doctor_query = """
-        SELECT id FROM doctors WHERE name = %s
-        """
-        cursor.execute(doctor_query, (data['doctor_name'],))
-        doctor_id = cursor.fetchone()[0]
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
 
         # Insert booked appointment into database
         appointment_insert_query = """
-        INSERT INTO booked_appointments (user_id, doctor_id, appointment_date, appointment_time, reason)
-        VALUES (%s, %s, %s, %s, %s)
+        INSERT INTO booked_appointments (user_id, doctor_id, appointment_date, appointment_time, reason, status)
+        VALUES (%s, %s, %s, %s, %s, %s)
         """
         appointment_insert_values = (
-            data['user_id'], doctor_id, data['appointment_date'],
-            data['appointment_time'], data['reason']
+            data['user_id'],
+            data['doctor_id'],
+            data['appointment_date'],
+            data['appointment_time'],
+            data['reason'],
+            'Scheduled'
         )
         cursor.execute(appointment_insert_query, appointment_insert_values)
-        db.commit()
+        conn.commit()
 
         return jsonify({"message": "Appointment booked successfully!"}), 201
 
     except KeyError as e:
         return jsonify({"error": f"Missing required field: {str(e)}"}), 400
-
-    except pymysql.Error as e:
-        db.rollback()
+    except Error as e:
         return jsonify({"error": f"Database error: {str(e)}"}), 500
-
+    except Exception as e:
+        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
     finally:
-        if 'cursor' in locals() and cursor is not None:
+        if cursor:
             cursor.close()
-
-
+        if conn and conn.is_connected():
+            conn.close()
 
 @app.route('/get_prescriptions', methods=['GET'])
 def get_prescriptions():
     user_id = request.args.get('user_id')
-
     try:
         cursor = db.cursor(dictionary=True)
-        query = """
-        SELECT id, prescription_date, doctor_name, diagnosis, medications, instructions
-        FROM prescriptions
-        WHERE user_id = %s
-        """
+        query = "SELECT * FROM prescriptions WHERE user_id = %s"
         cursor.execute(query, (user_id,))
         prescriptions = cursor.fetchall()
-        cursor.close()
         return jsonify(prescriptions), 200
-
     except Error as e:
-        return jsonify({"error": f"Database error: {str(e)}"}), 500
-
-
-@app.route('/get_appointments', methods=['GET'])
-def get_appointments():
-    user_id = request.args.get('user_id')
-
-    try:
-        cursor = db.cursor(dictionary=True)
-        query = """
-        SELECT ba.appointment_date, ba.appointment_time, d.name AS doctor_name, ba.status
-        FROM booked_appointments ba
-        JOIN doctors d ON ba.doctor_id = d.id
-        WHERE ba.user_id = %s
-        """
-        cursor.execute(query, (user_id,))
-        appointments = cursor.fetchall()
+        return handle_db_error(f"Database error: {str(e)}")
+    finally:
         cursor.close()
-
-        # Ensure all keys and values are serializable
-        for appointment in appointments:
-            appointment['appointment_date'] = appointment['appointment_date'].isoformat()
-            appointment['appointment_time'] = str(appointment['appointment_time'])
-
-        return jsonify(appointments), 200
-
-    except Exception as e:
-        return jsonify({"error": f"Database error: {str(e)}"}), 500
-
-
-@app.route('/delete_appointment', methods=['DELETE'])
-def delete_appointment():
-    data = request.get_json()
-    user_id = data.get('user_id')
-    appointment_date = data.get('appointment_date')
-    appointment_time = data.get('appointment_time')
-
-    try:
-        cursor = db.cursor()
-        cursor.execute("""
-            DELETE FROM booked_appointments
-            WHERE user_id = %s AND appointment_date = %s AND appointment_time = %s
-        """, (user_id, appointment_date, appointment_time))
-        db.commit()
-        cursor.close()
-        return jsonify({"message": "Appointment deleted successfully"}), 200
-    except Exception as e:
-        return jsonify({"error": f"Database error: {str(e)}"}), 500
-
-@app.route('/update_appointment', methods=['PUT'])
-def update_appointment():
-    data = request.get_json()
-    user_id = data.get('user_id')
-    old_appointment_date = data.get('old_appointment_date')
-    old_appointment_time = data.get('old_appointment_time')
-    new_doctor_id = data.get('new_doctor_id')
-    new_date = data.get('new_date')
-    new_time = data.get('new_time')
-
-    try:
-        cursor = db.cursor()
-        cursor.execute("""
-            UPDATE booked_appointments
-            SET doctor_id = %s, appointment_date = %s, appointment_time = %s
-            WHERE user_id = %s AND appointment_date = %s AND appointment_time = %s
-        """, (new_doctor_id, new_date, new_time, user_id, old_appointment_date, old_appointment_time))
-        db.commit()
-        cursor.close()
-        return jsonify({"message": "Appointment updated successfully"}), 200
-    except Exception as e:
-        return jsonify({"error": f"Database error: {str(e)}"}), 500
-
 
 male_names = pd.read_csv('assets/boys_names.csv')
 female_names = pd.read_csv('assets/girls_names.csv')

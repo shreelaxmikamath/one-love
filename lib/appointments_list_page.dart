@@ -1,270 +1,93 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
 import 'package:http/http.dart' as http;
-
-extension FirstWhereOrNullExtension<E> on Iterable<E> {
-  E? firstWhereOrNull(bool Function(E) test) {
-    for (E element in this) {
-      if (test(element)) return element;
-    }
-    return null;
-  }
-}
+import 'dart:convert';
+import 'appointments_page.dart';
 
 class AppointmentsListPage extends StatefulWidget {
   final String userId;
 
-  AppointmentsListPage({required this.userId});
+  const AppointmentsListPage({Key? key, required this.userId}) : super(key: key);
 
   @override
   _AppointmentsListPageState createState() => _AppointmentsListPageState();
 }
 
 class _AppointmentsListPageState extends State<AppointmentsListPage> {
-  List<dynamic> appointments = [];
-  List<dynamic> doctors = [];
+  List<Map<String, dynamic>> _appointments = [];
 
   @override
   void initState() {
     super.initState();
-    fetchAppointments();
-    fetchDoctors();
+    _fetchAppointments();
   }
 
-  Future<void> fetchAppointments() async {
+  Future<void> _fetchAppointments() async {
     try {
-      final url = 'http://10.0.2.2:5000/get_appointments?user_id=${widget.userId}';
-      final response = await http.get(Uri.parse(url));
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:5000/appointments/${widget.userId}'),
+      );
 
       if (response.statusCode == 200) {
+        List<dynamic> appointmentsData = json.decode(response.body);
         setState(() {
-          appointments = jsonDecode(response.body) as List<dynamic>;
+          _appointments = List<Map<String, dynamic>>.from(appointmentsData);
         });
       } else {
-        print('Failed to fetch appointments: ${response.statusCode}');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to fetch appointments')),
-        );
+        throw Exception('Failed to fetch appointments');
       }
     } catch (e) {
       print('Error fetching appointments: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching appointments')),
+        const SnackBar(
+          content: Text('Failed to load appointments. Please try again.'),
+          duration: Duration(seconds: 2),
+        ),
       );
     }
   }
 
-  Future<void> fetchDoctors() async {
+  Future<void> _deleteAppointment(int appointmentId) async {
     try {
-      final url = 'http://10.0.2.2:5000/doctors';
-      final response = await http.get(Uri.parse(url));
+      final response = await http.delete(
+        Uri.parse('http://10.0.2.2:5000/appointments/$appointmentId'),
+      );
 
       if (response.statusCode == 200) {
-        setState(() {
-          doctors = jsonDecode(response.body) as List<dynamic>;
-        });
-      } else {
-        print('Failed to fetch doctors: ${response.statusCode}');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to fetch doctors')),
+          const SnackBar(
+            content: Text('Appointment deleted successfully.'),
+            duration: Duration(seconds: 2),
+          ),
         );
+        _fetchAppointments();
+      } else {
+        throw Exception('Failed to delete appointment');
       }
     } catch (e) {
-      print('Error fetching doctors: $e');
+      print('Error deleting appointment: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching doctors')),
+        const SnackBar(
+          content: Text('Failed to delete appointment. Please try again.'),
+          duration: Duration(seconds: 2),
+        ),
       );
     }
   }
 
-  Future<void> updateAppointment(String appointmentDate, String appointmentTime, String currentDoctorName) async {
-    if (doctors.isEmpty) {
-      await fetchDoctors();
-    }
-
-    final updatedDetails = await showDialog<Map<String, dynamic>>(
-      context: context,
-      builder: (BuildContext context) {
-        DateTime newDate = DateTime.parse(appointmentDate);
-        TimeOfDay newTime = TimeOfDay(
-          hour: int.parse(appointmentTime.split(':')[0]),
-          minute: int.parse(appointmentTime.split(':')[1]),
-        );
-        String? selectedDoctorId = doctors.firstWhereOrNull((doctor) => doctor['name'] == currentDoctorName)?['id']?.toString();
-
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: Text('Update Appointment'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  DropdownButtonFormField<String>(
-                    value: selectedDoctorId,
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        selectedDoctorId = newValue!;
-                      });
-                    },
-                    items: doctors.map<DropdownMenuItem<String>>((dynamic doctor) {
-                      return DropdownMenuItem<String>(
-                        value: doctor['id'].toString(),
-                        child: Text(doctor['name']),
-                      );
-                    }).toList(),
-                    decoration: InputDecoration(labelText: 'Select Doctor'),
-                  ),
-                  InkWell(
-                    onTap: () async {
-                      final pickedDate = await showDatePicker(
-                        context: context,
-                        initialDate: newDate.isBefore(DateTime.now()) ? DateTime.now() : newDate,
-                        firstDate: DateTime.now(),
-                        lastDate: DateTime(2100),
-                      );
-                      if (pickedDate != null) {
-                        setState(() {
-                          newDate = pickedDate;
-                        });
-                      }
-                    },
-                    child: InputDecorator(
-                      decoration: InputDecoration(labelText: 'Select Date'),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('${newDate.day}/${newDate.month}/${newDate.year}'),
-                          Icon(Icons.calendar_today),
-                        ],
-                      ),
-                    ),
-                  ),
-                  InkWell(
-                    onTap: () async {
-                      final pickedTime = await showTimePicker(
-                        context: context,
-                        initialTime: newTime,
-                      );
-                      if (pickedTime != null) {
-                        setState(() {
-                          newTime = pickedTime;
-                        });
-                      }
-                    },
-                    child: InputDecorator(
-                      decoration: InputDecoration(labelText: 'Select Time'),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('${newTime.hour.toString().padLeft(2, '0')}:${newTime.minute.toString().padLeft(2, '0')}'),
-                          Icon(Icons.access_time),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop({
-                      'doctor_id': selectedDoctorId,
-                      'date': newDate.toIso8601String(),
-                      'time': '${newTime.hour}:${newTime.minute}',
-                    });
-                  },
-                  child: Text('Update'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: Text('Cancel'),
-                ),
-              ],
-            );
-          },
-        );
-      },
+  Future<void> _editAppointment(Map<String, dynamic> appointment) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AppointmentsPage(
+          userId: widget.userId,
+          isEditing: true,
+          appointment: appointment,
+        ),
+      ),
     );
 
-    if (updatedDetails != null) {
-      DateTime newDate = DateTime.parse(updatedDetails['date']);
-      if (newDate.isBefore(DateTime.now())) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Cannot set appointment date in the past')));
-        return;
-      }
-
-      final url = 'http://10.0.2.2:5000/update_appointment';
-      final response = await http.put(
-        Uri.parse(url),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode({
-          'user_id': widget.userId,
-          'old_appointment_date': appointmentDate,
-          'old_appointment_time': appointmentTime,
-          'new_doctor_id': updatedDetails['doctor_id'],
-          'new_date': updatedDetails['date'],
-          'new_time': updatedDetails['time'],
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        fetchAppointments();
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Appointment updated successfully')));
-      } else {
-        print('Failed to update appointment: ${response.statusCode}');
-        final errorMessage = jsonDecode(response.body)['error'] ?? 'Failed to update appointment';
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessage)));
-      }
-    }
-  }
-
-  Future<void> deleteAppointment(String appointmentDate, String appointmentTime) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Confirm Deletion'),
-          content: Text('Are you sure you want to delete this appointment?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: Text('Delete'),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (confirmed == true) {
-      final url = 'http://10.0.2.2:5000/delete_appointment';
-      final response = await http.delete(
-        Uri.parse(url),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode({
-          'user_id': widget.userId,
-          'appointment_date': appointmentDate,
-          'appointment_time': appointmentTime,
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        fetchAppointments();
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Appointment deleted successfully')));
-      } else {
-        print('Failed to delete appointment: ${response.statusCode}');
-        final errorMessage = jsonDecode(response.body)['error'] ?? 'Failed to delete appointment';
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessage)));
-      }
+    if (result == true) {
+      _fetchAppointments();
     }
   }
 
@@ -272,42 +95,51 @@ class _AppointmentsListPageState extends State<AppointmentsListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Appointments List'),
+        title: const Text('My Appointments'),
       ),
-      body: appointments.isEmpty
-          ? Center(child: Text('No Appointments Yet!!'))
-          : ListView.builder(
-        padding: const EdgeInsets.all(16.0),
-        itemCount: appointments.length,
+      body: ListView.builder(
+        itemCount: _appointments.length,
         itemBuilder: (context, index) {
-          final appointment = appointments[index];
+          final appointment = _appointments[index];
           return Card(
-            elevation: 4,
-            margin: const EdgeInsets.symmetric(vertical: 8.0),
+            margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
             child: ListTile(
-              contentPadding: EdgeInsets.all(16.0),
-              title: Text('${appointment['appointment_date']} - ${appointment['appointment_time']}'),
-              subtitle: Text('Doctor: ${appointment['doctor_name']} - Status: ${appointment['status']}'),
+              title: Text('Dr. ${appointment['doctor_name']}'),
+              subtitle: Text(
+                '${appointment['appointment_date']} at ${appointment['appointment_time']}\n'
+                    'Reason: ${appointment['reason']}',
+              ),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
-                    icon: Icon(Icons.edit),
-                    onPressed: () {
-                      updateAppointment(appointment['appointment_date'], appointment['appointment_time'], appointment['doctor_name']);
-                    },
+                    icon: const Icon(Icons.edit),
+                    onPressed: () => _editAppointment(appointment),
                   ),
                   IconButton(
-                    icon: Icon(Icons.delete),
-                    onPressed: () {
-                      deleteAppointment(appointment['appointment_date'], appointment['appointment_time']);
-                    },
+                    icon: const Icon(Icons.delete),
+                    onPressed: () => _deleteAppointment(appointment['id']),
                   ),
                 ],
               ),
             ),
           );
         },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AppointmentsPage(userId: widget.userId),
+            ),
+          );
+
+          if (result == true) {
+            _fetchAppointments();
+          }
+        },
+        child: const Icon(Icons.add),
       ),
     );
   }
