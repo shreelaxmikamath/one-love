@@ -8,6 +8,7 @@ from flask_cors import CORS
 from datetime import datetime, timedelta
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
+from sklearn.tree import DecisionTreeRegressor
 from sklearn.preprocessing import StandardScaler
 import joblib
 
@@ -607,7 +608,7 @@ X_train_scaled = scaler.fit_transform(X_train)
 X_test_scaled = scaler.transform(X_test)
 
 # Train the model
-model = LinearRegression()
+model = DecisionTreeRegressor()
 model.fit(X_train_scaled, y_train)
 
 # Save the model and scaler
