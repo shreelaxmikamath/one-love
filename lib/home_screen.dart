@@ -7,6 +7,7 @@ import 'notifications_page.dart';
 import 'account_page.dart';
 import 'insights_page.dart';
 import 'others_page.dart';
+import 'exercise_page.dart';
 import 'pregnancy_weeks/week3.dart'; // Import for Week 3 Page
 import 'pregnancy_weeks/week4.dart';
 import 'pregnancy_weeks/week5.dart';
@@ -299,7 +300,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildPopularTools() {
-    List<String> tools = ["Nutrition", "Baby Names", "Tool 3"];
+    List<String> tools = ["Nutrition", "Baby Names", "Exercise"];
     return Column(
       children: [
         const Text(
@@ -324,6 +325,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => NutritionRecommendationPage()),
+                  );
+                }else if (tool == "Exercise") {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const ExercisePage()), // Navigate to ExercisePage
                   );
                 }
               },

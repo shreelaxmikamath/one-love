@@ -7,7 +7,7 @@ class Week35Page extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Week 35 Highlights'),
+        title: const Text('Week 35 '),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),

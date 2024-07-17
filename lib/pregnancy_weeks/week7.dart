@@ -7,7 +7,7 @@ class Week7Page extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Week 7 of Pregnancy'),
+        title: const Text('Week 7'),
       ),
       body: const SingleChildScrollView(
         padding: EdgeInsets.all(16.0),
