@@ -46,6 +46,7 @@ import 'pregnancy_weeks/week38.dart';
 import 'pregnancy_weeks/week39.dart';
 import 'pregnancy_weeks/week40.dart';
 import 'baby_names_page.dart';
+import 'nutrition_recommendation_page.dart';
 
 
 
@@ -298,7 +299,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildPopularTools() {
-    List<String> tools = ["Tool 1", "Baby Names", "Tool 3"]; // Replace with actual tool names
+    List<String> tools = ["Nutrition", "Baby Names", "Tool 3"];
     return Column(
       children: [
         const Text(
@@ -318,6 +319,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const BabyNamesPage()),
+                  );
+                } else if (tool == "Nutrition") {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => NutritionRecommendationPage()),
                   );
                 }
               },

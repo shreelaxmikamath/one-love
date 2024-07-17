@@ -6,6 +6,10 @@ import json
 import pandas as pd
 from flask_cors import CORS
 from datetime import datetime, timedelta
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import StandardScaler
+import joblib
 
 app = Flask(__name__)
 
@@ -573,6 +577,106 @@ def suggest_names():
 
     return jsonify(suggested_names)
 
+
+df = pd.read_csv('assets/pregnancy_nutrition_dataset.csv')
+
+# Prepare the features and target variables
+X = df[['pregnancy_week', 'weight', 'height']]
+y = df[['recommended_calories', 'recommended_protein', 'recommended_carbs', 'recommended_fat']]
+
+# One-hot encode the activity_level
+activity_dummies = pd.get_dummies(df['activity_level'], prefix='activity')
+X = pd.concat([X, activity_dummies], axis=1)
+
+# Ensure all activity levels are present
+for level in ['Sedentary', 'Lightly Active', 'Moderately Active', 'Very Active']:
+    if f'activity_{level}' not in X.columns:
+        X[f'activity_{level}'] = 0
+
+# Reorder columns to match prediction input
+X = X[['pregnancy_week', 'weight', 'height',
+       'activity_Sedentary', 'activity_Lightly Active',
+       'activity_Moderately Active', 'activity_Very Active']]
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Scale the features
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+# Train the model
+model = LinearRegression()
+model.fit(X_train_scaled, y_train)
+
+# Save the model and scaler
+joblib.dump(model, 'nutrition_model.joblib')
+joblib.dump(scaler, 'nutrition_scaler.joblib')
+
+def predict_nutrition(pregnancy_week, weight, height, activity_level):
+    # Load the saved model and scaler
+    model = joblib.load('nutrition_model.joblib')
+    scaler = joblib.load('nutrition_scaler.joblib')
+
+    # Prepare the input data
+    input_data = pd.DataFrame({
+        'pregnancy_week': [pregnancy_week],
+        'weight': [weight],
+        'height': [height],
+        'activity_Sedentary': [0],
+        'activity_Lightly Active': [0],
+        'activity_Moderately Active': [0],
+        'activity_Very Active': [0]
+    })
+
+    # Set the correct activity level
+    activity_column = f'activity_{activity_level}'
+    if activity_column in input_data.columns:
+        input_data[activity_column] = 1
+
+    # Ensure column order matches training data
+    expected_columns = ['pregnancy_week', 'weight', 'height',
+                        'activity_Sedentary', 'activity_Lightly Active',
+                        'activity_Moderately Active', 'activity_Very Active']
+    input_data = input_data.reindex(columns=expected_columns)
+
+    # Scale the input data
+    input_scaled = scaler.transform(input_data)
+
+    # Make predictions
+    predictions = model.predict(input_scaled)
+
+    return {
+        'calories': round(predictions[0][0], 2),
+        'protein': round(predictions[0][1], 2),
+        'carbs': round(predictions[0][2], 2),
+        'fat': round(predictions[0][3], 2)
+    }
+
+# Add this to your Flask app
+@app.route('/nutrition_recommendation', methods=['POST'])
+def nutrition_recommendation():
+    data = request.json
+    print(f"Received data: {data}")  # Log received data
+    try:
+        if not all(key in data for key in ['pregnancy_week', 'weight', 'height', 'activity_level']):
+            raise ValueError("Missing required fields")
+
+        recommendation = predict_nutrition(
+            data['pregnancy_week'],
+            data['weight'],
+            data['height'],
+            data['activity_level']
+        )
+        print(f"Recommendation: {recommendation}")  # Log recommendation
+        return jsonify(recommendation), 200
+    except ValueError as ve:
+        print(f"ValueError: {str(ve)}")
+        return jsonify({"error": str(ve)}), 400
+    except Exception as e:
+        print(f"Unexpected error: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
