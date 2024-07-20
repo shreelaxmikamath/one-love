@@ -70,58 +70,104 @@ class _BabyNamesPageState extends State<BabyNamesPage> {
       appBar: AppBar(title: const Text('Baby Names Suggestion')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            DropdownButton<String>(
-              hint: const Text('Select Gender'),
-              value: selectedGender,
-              items: const [
-                DropdownMenuItem(value: 'Male', child: Text('Male')),
-                DropdownMenuItem(value: 'Female', child: Text('Female')),
-              ],
-              onChanged: (value) => setState(() => selectedGender = value),
-            ),
-            CheckboxListTile(
-              title: const Text('Search by Meaning'),
-              value: searchByMeaning,
-              onChanged: (value) => setState(() => searchByMeaning = value ?? false),
-            ),
-            if (searchByMeaning)
-              TextField(
-                decoration: const InputDecoration(labelText: 'Enter Keyword for Meaning'),
-                onChanged: (value) => setState(() => keyword = value),
-              )
-            else ...[
-              DropdownButton<String>(
-                hint: const Text('Select Letter Position'),
-                value: selectedLetterPosition,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Select Gender',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                hint: const Text('Select Gender'),
+                value: selectedGender,
                 items: const [
-                  DropdownMenuItem(value: 'First', child: Text('First Letter')),
-                  DropdownMenuItem(value: 'Last', child: Text('Last Letter')),
+                  DropdownMenuItem(value: 'Male', child: Text('Male')),
+                  DropdownMenuItem(value: 'Female', child: Text('Female')),
                 ],
-                onChanged: (value) => setState(() => selectedLetterPosition = value),
-              ),
-              TextField(
-                decoration: const InputDecoration(labelText: 'Enter Letter'),
-                onChanged: (value) => setState(() => letter = value),
-              ),
-            ],
-            ElevatedButton(
-              onPressed: _suggestNames,
-              child: const Text('Suggest Names'),
-            ),
-            const SizedBox(height: 20),
-            const Text('Suggested Names:', style: TextStyle(fontSize: 18)),
-            Expanded(
-              child: ListView.builder(
-                itemCount: suggestedNames.length,
-                itemBuilder: (context, index) => ListTile(
-                  title: Text(suggestedNames[index]['Name'] ?? ''),
-                  subtitle: Text(suggestedNames[index]['Meaning'] ?? ''),
+                onChanged: (value) => setState(() => selectedGender = value),
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+              CheckboxListTile(
+                title: const Text('Search by Meaning'),
+                value: searchByMeaning,
+                onChanged: (value) => setState(() => searchByMeaning = value ?? false),
+                controlAffinity: ListTileControlAffinity.leading,
+              ),
+              const SizedBox(height: 16),
+              if (searchByMeaning)
+                TextField(
+                  decoration: const InputDecoration(
+                    labelText: 'Enter Keyword for Meaning',
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: (value) => setState(() => keyword = value),
+                )
+              else ...[
+                const Text(
+                  'Select Letter Position',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  hint: const Text('Select Letter Position'),
+                  value: selectedLetterPosition,
+                  items: const [
+                    DropdownMenuItem(value: 'First', child: Text('First Letter')),
+                    DropdownMenuItem(value: 'Last', child: Text('Last Letter')),
+                  ],
+                  onChanged: (value) => setState(() => selectedLetterPosition = value),
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  decoration: const InputDecoration(
+                    labelText: 'Enter Letter',
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: (value) => setState(() => letter = value),
+                ),
+              ],
+              const SizedBox(height: 16),
+              Center(
+                child: ElevatedButton.icon(
+                  onPressed: _suggestNames,
+                  icon: const Icon(Icons.search),
+                  label: const Text('Suggest Names'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    textStyle: const TextStyle(fontSize: 16),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Suggested Names:',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 10),
+              suggestedNames.isEmpty
+                  ? const Text('No names suggested yet.')
+                  : ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: suggestedNames.length,
+                itemBuilder: (context, index) => Card(
+                  margin: const EdgeInsets.symmetric(vertical: 5),
+                  child: ListTile(
+                    title: Text(suggestedNames[index]['Name'] ?? ''),
+                    subtitle: Text(suggestedNames[index]['Meaning'] ?? ''),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

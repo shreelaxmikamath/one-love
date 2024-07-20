@@ -626,37 +626,23 @@ def nutrition_recommendation():
 
 # Function to safely read CSV files
 def read_csv_safely(file_path):
-    with open(file_path, 'r', encoding='utf-8') as f:
-        csv_reader = csv.reader(f)
-        rows = list(csv_reader)
-
-    header = rows[0]
-    data = rows[1:]
-    return pd.DataFrame(data, columns=header)
-
-
-def read_csv_safely(file_path):
-    with open(file_path, 'r', encoding='utf-8') as f:
-        reader = csv.reader(f)
-        data = []
+    data = []
+    with open(file_path, 'r', encoding='utf-8') as file:
+        reader = csv.reader(file)
         for row in reader:
-            if len(row) >= 2:  # Ensure at least 2 columns
-                data.append([row[0], ','.join(row[1:])])  # Join extra columns if any
-    return pd.DataFrame(data, columns=['Name', 'Meaning'])
+            if len(row) >= 2:
+                data.append([row[0].strip(), ','.join(row[1:]).strip()])
+    return pd.DataFrame(data, columns=['Name', 'Meaning']).drop_duplicates(subset=['Name'])
 
 def read_names_file(file_path):
+    df = read_csv_safely(file_path)
     names_data = defaultdict(list)
-    with open(file_path, 'r', encoding='utf-8') as file:
-        csv_reader = csv.reader(file)
-        next(csv_reader)  # Skip header row
-        for row in csv_reader:
-            if len(row) >= 2:
-                name = row[0].strip()
-                meaning = ','.join(row[1:]).strip()  # Join all fields after name as meaning
-                names_data[name.lower()].append({'Name': name, 'Meaning': meaning})
+    for _, row in df.iterrows():
+        name = row['Name'].strip().lower()
+        meaning = row['Meaning'].strip()
+        names_data[name].append({'Name': row['Name'], 'Meaning': meaning})
     return names_data
 
-# Load datasets
 boys_names = read_names_file('assets/boys_names.csv')
 girls_names = read_names_file('assets/girls_names.csv')
 
