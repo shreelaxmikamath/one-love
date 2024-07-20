@@ -1,17 +1,17 @@
 from flask import Flask, request, jsonify
 import mysql.connector
 from mysql.connector import Error
+from collections import defaultdict
 import os
+import csv
 import json
 import pandas as pd
 from flask_cors import CORS
 from datetime import datetime, timedelta
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
-from sklearn.tree import DecisionTreeRegressor
 from sklearn.preprocessing import StandardScaler
 import joblib
-
 app = Flask(__name__)
 
 # Establish database connection
@@ -239,55 +239,20 @@ def notifications():
     else:
         return jsonify({"message": "No notifications found!"}), 404
 
-# Emergency contact
-@app.route('/emergency_contact', methods=['POST'])
-def add_emergency_contact():
-    try:
-        # Get data from request
-        data = request.json
-        name = data['name']
-        phone = data['phone']
 
-        # Check if name and phone are provided
-        if not name or not phone:
-            return jsonify({"error": "Both name and phone are required"}), 400
-
-        # Validate phone number format
-        if not phone.isdigit() or len(phone) != 10:
-            return jsonify({"error": "Invalid phone number format. It should be a 10-digit number."}), 400
-
-        # Insert emergency contact into database
-        cursor = db.cursor()
-        insert_query = """
-        INSERT INTO emergency_contacts (user_id, name, phone)
-        VALUES (%s, %s, %s)
-        """
-        user_id = 1  # Replace with the actual user_id from your authentication system
-        insert_values = (user_id, name, phone)
-        cursor.execute(insert_query, insert_values)
-        db.commit()
-        cursor.close()
-
-        return jsonify({"message": "Emergency contact added successfully!"}), 201
-
-    except Error as e:
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/emergency_contacts', methods=['GET'])
-def get_emergency_contacts():
+@app.route('/notification_count', methods=['GET'])
+def get_notification_count():
     user_id = request.args.get('user_id')
-    try:
-        cursor = db.cursor(dictionary=True)
-        query = "SELECT * FROM emergency_contacts WHERE user_id = %s"
-        cursor.execute(query, (user_id,))
-        contacts = cursor.fetchall()
-        cursor.close()
 
-        return jsonify(contacts), 200
+    cursor = db.cursor(dictionary=True)
+    query = "SELECT COUNT(*) as count FROM notes WHERE user_id=%s AND date=%s"
+    current_date = datetime.now().strftime('%Y-%m-%d')
+    cursor.execute(query, (user_id, current_date))
+    result = cursor.fetchone()
+    cursor.close()
 
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
+    count = result['count'] if result else 0
+    return jsonify({'count': count}), 200
 
 @app.route('/categories', methods=['POST'])
 def add_category():
@@ -556,27 +521,6 @@ def get_prescriptions():
     finally:
         cursor.close()
 
-male_names = pd.read_csv('assets/boys_names.csv')
-female_names = pd.read_csv('assets/girls_names.csv')
-
-@app.route('/suggest_names', methods=['POST'])
-def suggest_names():
-    data = request.json
-    letter_position = data.get('letter_position')  # 'First' or 'Last'
-    letter = data.get('letter')
-    gender = data.get('gender')  # 'Male' or 'Female'
-
-    if gender == 'Male':
-        names = male_names['name'].dropna()  # Drop NaN values
-    else:
-        names = female_names['name'].dropna()  # Drop NaN values
-
-    if letter_position == 'First':
-        suggested_names = names[names.str.startswith(letter)].tolist()
-    else:
-        suggested_names = names[names.str.endswith(letter)].tolist()
-
-    return jsonify(suggested_names)
 
 
 df = pd.read_csv('assets/pregnancy_nutrition_dataset.csv')
@@ -608,7 +552,7 @@ X_train_scaled = scaler.fit_transform(X_train)
 X_test_scaled = scaler.transform(X_test)
 
 # Train the model
-model = DecisionTreeRegressor()
+model = LinearRegression()
 model.fit(X_train_scaled, y_train)
 
 # Save the model and scaler
@@ -679,8 +623,74 @@ def nutrition_recommendation():
         print(f"Unexpected error: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
+
+# Function to safely read CSV files
+def read_csv_safely(file_path):
+    with open(file_path, 'r', encoding='utf-8') as f:
+        csv_reader = csv.reader(f)
+        rows = list(csv_reader)
+
+    header = rows[0]
+    data = rows[1:]
+    return pd.DataFrame(data, columns=header)
+
+
+def read_csv_safely(file_path):
+    with open(file_path, 'r', encoding='utf-8') as f:
+        reader = csv.reader(f)
+        data = []
+        for row in reader:
+            if len(row) >= 2:  # Ensure at least 2 columns
+                data.append([row[0], ','.join(row[1:])])  # Join extra columns if any
+    return pd.DataFrame(data, columns=['Name', 'Meaning'])
+
+def read_names_file(file_path):
+    names_data = defaultdict(list)
+    with open(file_path, 'r', encoding='utf-8') as file:
+        csv_reader = csv.reader(file)
+        next(csv_reader)  # Skip header row
+        for row in csv_reader:
+            if len(row) >= 2:
+                name = row[0].strip()
+                meaning = ','.join(row[1:]).strip()  # Join all fields after name as meaning
+                names_data[name.lower()].append({'Name': name, 'Meaning': meaning})
+    return names_data
+
+# Load datasets
+boys_names = read_names_file('assets/boys_names.csv')
+girls_names = read_names_file('assets/girls_names.csv')
+
+@app.route('/suggest_names', methods=['POST'])
+def suggest_names():
+    data = request.json
+    letter_position = data['letter_position']
+    letter = data['letter'].lower() if data['letter'] else ''
+    gender = data['gender']
+    keyword = data.get('keyword_for_meaning', '').lower()
+
+    names_data = boys_names if gender == 'Male' else girls_names
+
+    suggested_names = []
+
+    if letter_position == 'First':
+        suggested_names = [name for name in names_data if name.startswith(letter)]
+    elif letter_position == 'Last':
+        suggested_names = [name for name in names_data if name.endswith(letter)]
+    else:  # Meaning search
+        for name_list in names_data.values():
+            for name_data in name_list:
+                if keyword in name_data['Meaning'].lower():
+                    suggested_names.append(name_data['Name'].lower())
+
+    # Remove duplicates and limit to 10 results
+    suggested_names = list(dict.fromkeys(suggested_names))[:10]
+
+    # Fetch full data for suggested names
+    result = []
+    for name in suggested_names:
+        if name in names_data:
+            result.extend(names_data[name])
+
+    return jsonify(result)
 if __name__ == '__main__':
     app.run(debug=True)
-
-
-

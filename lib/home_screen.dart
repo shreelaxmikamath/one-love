@@ -48,7 +48,7 @@ import 'pregnancy_weeks/week39.dart';
 import 'pregnancy_weeks/week40.dart';
 import 'baby_names_page.dart';
 import 'nutrition_recommendation_page.dart';
-
+import 'package:badges/badges.dart' as badges;
 
 
 class HomeScreen extends StatefulWidget {
@@ -68,6 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final DateTime _now = DateTime.now();
   int _currentImageIndex = 0;
   late Timer _timer;
+  int _notificationCount = 0;
 
   final List<String> _imageAssets = [
     'assets/image1.jpg', // Replace with your actual asset paths
@@ -80,6 +81,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _loadUserInfo();
     _startImageSlideshow();
+    _fetchNotificationCount();
   }
 
   void _startImageSlideshow() {
@@ -138,6 +140,21 @@ class _HomeScreenState extends State<HomeScreen> {
           MaterialPageRoute(builder: (context) => OthersPage(userId: int.parse(widget.userId))),
         );
         break;
+    }
+  }
+  Future<void> _fetchNotificationCount() async {
+    try {
+      final response = await http.get(Uri.parse(
+          'http://10.0.2.2:5000/notification_count?user_id=${widget.userId}'
+      ));
+      if (response.statusCode == 200) {
+        final count = json.decode(response.body)['count'];
+        setState(() {
+          _notificationCount = count;
+        });
+      }
+    } catch (e) {
+      print('Error fetching notification count: $e');
     }
   }
 
@@ -384,14 +401,22 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.notifications),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => NotificationsPage(userId: widget.userId)),
-              );
-            },
+          badges.Badge(
+            position: badges.BadgePosition.topEnd(top: 0, end: 3),
+            showBadge: _notificationCount > 0,
+            badgeContent: Text(
+              _notificationCount.toString(),
+              style: TextStyle(color: Colors.white, fontSize: 10),
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.notifications),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => NotificationsPage(userId: widget.userId)),
+                ).then((_) => _fetchNotificationCount());
+              },
+            ),
           ),
           IconButton(
             icon: const Icon(Icons.account_circle),
@@ -409,12 +434,12 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              _buildImageSlideshow(),
-              const SizedBox(height: 20),
               _buildWeeklyCalendar(),
               const SizedBox(height: 20),
+              _buildImageSlideshow(),
+              const SizedBox(height: 70),
               _buildPopularTools(),
-              const SizedBox(height: 20),
+              const SizedBox(height: 50),
               _buildPregnancyWeekBoxes(),
             ],
           ),

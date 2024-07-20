@@ -10,86 +10,68 @@ class BabyNamesPage extends StatefulWidget {
 }
 
 class _BabyNamesPageState extends State<BabyNamesPage> {
-  String? selectedLetter;
+  String? selectedLetterPosition;
   String? selectedGender;
-  List<String> suggestedNames = [];
+  String? letter;
+  bool searchByMeaning = false;
+  String? keyword;
+  List<Map<String, dynamic>> suggestedNames = [];
 
-  void _suggestNames() async {
-    if (selectedLetter != null && selectedGender != null) {
-      String letter = '';
+  Future<void> _suggestNames() async {
+    if (selectedGender == null || (searchByMeaning && keyword == null) ||
+        (!searchByMeaning && (selectedLetterPosition == null || letter == null))) {
+      _showErrorDialog('Please fill in all required fields.');
+      return;
+    }
 
-      // Show a dialog to input the letter
-      showDialog(
-        context: context,
-        builder: (context) {
-          String userInput = '';
-          return AlertDialog(
-            title: const Text('Enter Letter'),
-            content: TextField(
-              onChanged: (value) {
-                userInput = value;
-              },
-              decoration: const InputDecoration(hintText: 'Enter a letter'),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  letter = userInput;
-                  Navigator.of(context).pop();
-                  _fetchSuggestedNames(letter);
-                },
-                child: const Text('Submit'),
-              ),
-            ],
-          );
-        },
+    try {
+      var response = await http.post(
+        Uri.parse('http://10.0.2.2:5000/suggest_names'),
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({
+          'letter_position': searchByMeaning ? 'Meaning' : selectedLetterPosition,
+          'letter': letter,
+          'gender': selectedGender,
+          'keyword_for_meaning': keyword,
+        }),
       );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          suggestedNames = List<Map<String, dynamic>>.from(json.decode(response.body));
+        });
+      } else {
+        _showErrorDialog('Failed to fetch names. Please try again.');
+      }
+    } catch (e) {
+      _showErrorDialog('An error occurred. Please check your connection and try again.');
     }
   }
 
-  void _fetchSuggestedNames(String letter) async {
-    var response = await http.post(
-      Uri.parse('http://10.0.2.2:5000/suggest_names'), // Replace with your Flask API URL
-      headers: {"Content-Type": "application/json"},
-      body: json.encode({
-        'letter_position': selectedLetter,
-        'letter': letter,
-        'gender': selectedGender,
-      }),
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
     );
-
-    if (response.statusCode == 200) {
-      setState(() {
-        suggestedNames = List<String>.from(json.decode(response.body));
-      });
-    } else {
-      print("Failed to fetch names!");
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Baby Names Suggestion'),
-      ),
+      appBar: AppBar(title: const Text('Baby Names Suggestion')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            DropdownButton<String>(
-              hint: const Text('Select Letter Position'),
-              value: selectedLetter,
-              items: const [
-                DropdownMenuItem(value: 'First', child: Text('First Letter')),
-                DropdownMenuItem(value: 'Last', child: Text('Last Letter')),
-              ],
-              onChanged: (value) {
-                setState(() {
-                  selectedLetter = value;
-                });
-              },
-            ),
             DropdownButton<String>(
               hint: const Text('Select Gender'),
               value: selectedGender,
@@ -97,12 +79,33 @@ class _BabyNamesPageState extends State<BabyNamesPage> {
                 DropdownMenuItem(value: 'Male', child: Text('Male')),
                 DropdownMenuItem(value: 'Female', child: Text('Female')),
               ],
-              onChanged: (value) {
-                setState(() {
-                  selectedGender = value;
-                });
-              },
+              onChanged: (value) => setState(() => selectedGender = value),
             ),
+            CheckboxListTile(
+              title: const Text('Search by Meaning'),
+              value: searchByMeaning,
+              onChanged: (value) => setState(() => searchByMeaning = value ?? false),
+            ),
+            if (searchByMeaning)
+              TextField(
+                decoration: const InputDecoration(labelText: 'Enter Keyword for Meaning'),
+                onChanged: (value) => setState(() => keyword = value),
+              )
+            else ...[
+              DropdownButton<String>(
+                hint: const Text('Select Letter Position'),
+                value: selectedLetterPosition,
+                items: const [
+                  DropdownMenuItem(value: 'First', child: Text('First Letter')),
+                  DropdownMenuItem(value: 'Last', child: Text('Last Letter')),
+                ],
+                onChanged: (value) => setState(() => selectedLetterPosition = value),
+              ),
+              TextField(
+                decoration: const InputDecoration(labelText: 'Enter Letter'),
+                onChanged: (value) => setState(() => letter = value),
+              ),
+            ],
             ElevatedButton(
               onPressed: _suggestNames,
               child: const Text('Suggest Names'),
@@ -112,11 +115,10 @@ class _BabyNamesPageState extends State<BabyNamesPage> {
             Expanded(
               child: ListView.builder(
                 itemCount: suggestedNames.length,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    title: Text(suggestedNames[index]),
-                  );
-                },
+                itemBuilder: (context, index) => ListTile(
+                  title: Text(suggestedNames[index]['Name'] ?? ''),
+                  subtitle: Text(suggestedNames[index]['Meaning'] ?? ''),
+                ),
               ),
             ),
           ],
