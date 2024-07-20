@@ -199,7 +199,7 @@ class _AccountPageState extends State<AccountPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Account'),
+        title: const Text('Account', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
         actions: [
           if (!_isLoading && _userInfo != null) ...[
             IconButton(
