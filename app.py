@@ -526,7 +526,7 @@ def get_prescriptions():
 df = pd.read_csv('assets/pregnancy_nutrition_dataset.csv')
 
 # Prepare the features and target variables
-X = df[['pregnancy_week', 'weight', 'height']]
+X = df[['trimester', 'weight', 'height']]
 y = df[['recommended_calories', 'recommended_protein', 'recommended_carbs', 'recommended_fat']]
 
 # One-hot encode the activity_level
@@ -539,7 +539,7 @@ for level in ['Sedentary', 'Lightly Active', 'Moderately Active', 'Very Active']
         X[f'activity_{level}'] = 0
 
 # Reorder columns to match prediction input
-X = X[['pregnancy_week', 'weight', 'height',
+X = X[['trimester', 'weight', 'height',
        'activity_Sedentary', 'activity_Lightly Active',
        'activity_Moderately Active', 'activity_Very Active']]
 
@@ -559,14 +559,14 @@ model.fit(X_train_scaled, y_train)
 joblib.dump(model, 'nutrition_model.joblib')
 joblib.dump(scaler, 'nutrition_scaler.joblib')
 
-def predict_nutrition(pregnancy_week, weight, height, activity_level):
+def predict_nutrition(trimester, weight, height, activity_level):
     # Load the saved model and scaler
     model = joblib.load('nutrition_model.joblib')
     scaler = joblib.load('nutrition_scaler.joblib')
 
     # Prepare the input data
     input_data = pd.DataFrame({
-        'pregnancy_week': [pregnancy_week],
+        'trimester': [trimester],
         'weight': [weight],
         'height': [height],
         'activity_Sedentary': [0],
@@ -581,7 +581,7 @@ def predict_nutrition(pregnancy_week, weight, height, activity_level):
         input_data[activity_column] = 1
 
     # Ensure column order matches training data
-    expected_columns = ['pregnancy_week', 'weight', 'height',
+    expected_columns = ['trimester', 'weight', 'height',
                         'activity_Sedentary', 'activity_Lightly Active',
                         'activity_Moderately Active', 'activity_Very Active']
     input_data = input_data.reindex(columns=expected_columns)
@@ -605,11 +605,11 @@ def nutrition_recommendation():
     data = request.json
     print(f"Received data: {data}")  # Log received data
     try:
-        if not all(key in data for key in ['pregnancy_week', 'weight', 'height', 'activity_level']):
+        if not all(key in data for key in ['trimester', 'weight', 'height', 'activity_level']):
             raise ValueError("Missing required fields")
 
         recommendation = predict_nutrition(
-            data['pregnancy_week'],
+            data['trimester'],
             data['weight'],
             data['height'],
             data['activity_level']

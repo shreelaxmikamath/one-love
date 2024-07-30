@@ -9,7 +9,7 @@ class NutritionRecommendationPage extends StatefulWidget {
 
 class _NutritionRecommendationPageState extends State<NutritionRecommendationPage> {
   final _formKey = GlobalKey<FormState>();
-  int? _pregnancyWeek;
+  int? _trimester;
   double? _weight;
   double? _height;
   String? _activityLevel;
@@ -17,6 +17,7 @@ class _NutritionRecommendationPageState extends State<NutritionRecommendationPag
   bool _isLoading = false;
 
   final List<String> _activityLevels = ['Sedentary', 'Lightly Active', 'Moderately Active', 'Very Active'];
+  final List<int> _trimesters = [1, 2, 3];
 
   void _submitForm() async {
     if (_formKey.currentState!.validate()) {
@@ -31,7 +32,7 @@ class _NutritionRecommendationPageState extends State<NutritionRecommendationPag
           Uri.parse('http://10.0.2.2:5000/nutrition_recommendation'),
           headers: {"Content-Type": "application/json"},
           body: json.encode({
-            'pregnancy_week': _pregnancyWeek,
+            'trimester': _trimester,
             'weight': _weight,
             'height': _height,
             'activity_level': _activityLevel,
@@ -72,16 +73,25 @@ class _NutritionRecommendationPageState extends State<NutritionRecommendationPag
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TextFormField(
-                decoration: InputDecoration(labelText: 'Pregnancy Week'),
-                keyboardType: TextInputType.number,
+              DropdownButtonFormField<int>(
+                decoration: InputDecoration(labelText: 'Trimester'),
+                items: _trimesters.map((int value) {
+                  return DropdownMenuItem<int>(
+                    value: value,
+                    child: Text('Trimester $value'),
+                  );
+                }).toList(),
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter the pregnancy week';
+                  if (value == null) {
+                    return 'Please select the trimester';
                   }
                   return null;
                 },
-                onSaved: (value) => _pregnancyWeek = int.parse(value!),
+                onChanged: (value) {
+                  setState(() {
+                    _trimester = value;
+                  });
+                },
               ),
               TextFormField(
                 decoration: InputDecoration(labelText: 'Weight (kg)'),
